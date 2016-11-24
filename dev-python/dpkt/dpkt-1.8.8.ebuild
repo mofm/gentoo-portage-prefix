@@ -2,23 +2,15 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Id$
 
-EAPI=5
+EAPI=6
 PYTHON_COMPAT=( python2_7 )
 
 inherit distutils-r1
 
-DESCRIPTION="Better INI parser for Python"
-HOMEPAGE="https://pypi.python.org/pypi/iniparse"
+DESCRIPTION="Fast, simple packet creation / parsing"
+HOMEPAGE="https://github.com/kbandla/dpkt"
 SRC_URI="mirror://pypi/${PN:0:1}/${PN}/${P}.tar.gz"
 
-LICENSE="MIT PSF-2"
+LICENSE="BSD"
 SLOT="0"
-KEYWORDS="amd64 x86"
-IUSE=""
-
-DEPEND=""
-RDEPEND=""
-
-python_test() {
-	"${PYTHON}" runtests.py || die
-}
+KEYWORDS="~amd64 ~arm ~x86"
