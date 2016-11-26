@@ -4,15 +4,20 @@
 
 EAPI=6
 
+MY_PV=${PV/_/}
+MY_P=${PN}-${MY_PV}
+
 inherit user
 
 DESCRIPTION="UDP packets forwarder and duplicator"
 HOMEPAGE="https://github.com/sleinen/${PN}"
-SRC_URI="https://github.com/sleinen/${PN}/releases/download/v${PV}/${P}.tar.gz"
+SRC_URI="https://github.com/sleinen/${PN}/releases/download/${MY_PV}/${MY_P}.tar.gz"
 
 LICENSE="Artistic GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
+
+S="${WORKDIR}/${MY_P}"
 
 pkg_setup() {
 	# Add samplicator group and user to system
