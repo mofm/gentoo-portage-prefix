@@ -13,8 +13,8 @@ SRC_URI="http://central.maven.org/maven2/javax/annotation/javax.annotation-api/$
 
 LICENSE="|| ( CDDL GPL-2 )"
 SLOT="0"
-KEYWORDS="~amd64 ~x86"
+KEYWORDS="~amd64 ~ppc64 ~x86"
 
-RDEPEND=">=virtual/jre-1.5"
-DEPEND=">=virtual/jdk-1.5
+RDEPEND=">=virtual/jre-1.7"
+DEPEND=">=virtual/jdk-1.7
 	app-arch/unzip"
