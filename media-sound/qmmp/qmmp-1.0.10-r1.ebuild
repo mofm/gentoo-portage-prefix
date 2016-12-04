@@ -22,9 +22,9 @@ fi
 LICENSE="GPL-2"
 SLOT="0"
 # KEYWORDS further up
-IUSE="analyzer aac +alsa bs2b cdda cover crossfade cue curl enca ffmpeg flac jack game kde ladspa
-lyrics +mad midi mms modplug mplayer mpris musepack notifier opus oss projectm
-pulseaudio qsui scrobbler sndfile soxr stereo tray udisks +vorbis wavpack"
+IUSE="analyzer aac +alsa +dbus bs2b cdda cover crossfade cue curl enca ffmpeg flac jack game kde ladspa
+libsamplerate lyrics +mad midi mms modplug mplayer mpris musepack notifier opus oss
+projectm pulseaudio qsui scrobbler sndfile stereo tray udisks +vorbis wavpack"
 
 RDEPEND="media-libs/taglib
 	dev-qt/qtcore:5
@@ -38,11 +38,13 @@ RDEPEND="media-libs/taglib
 	cdda? ( dev-libs/libcdio-paranoia )
 	cue? ( media-libs/libcue )
 	curl? ( net-misc/curl )
+	dbus? ( sys-apps/dbus )
 	aac? ( media-libs/faad2 )
 	enca? ( app-i18n/enca )
 	flac? ( media-libs/flac )
 	game? ( media-libs/game-music-emu )
 	ladspa? ( media-libs/ladspa-cmt )
+	libsamplerate? ( media-libs/libsamplerate )
 	mad? ( media-libs/libmad )
 	midi? ( media-sound/wildmidi )
 	mms? ( media-libs/libmms )
@@ -63,7 +65,6 @@ RDEPEND="media-libs/taglib
 	wavpack? ( media-sound/wavpack )
 	scrobbler? ( net-misc/curl )
 	sndfile? ( media-libs/libsndfile )
-	soxr? ( media-libs/soxr )
 	udisks? ( sys-fs/udisks:2 )"
 DEPEND="${RDEPEND}
 	dev-qt/linguist-tools:5"
@@ -71,6 +72,8 @@ DEPEND="${RDEPEND}
 DOCS="AUTHORS ChangeLog README"
 
 CMAKE_IN_SOURCE_BUILD="1"
+
+REQUIRED_USE="kde? ( dbus ) "
 
 src_prepare() {
 	if has_version dev-libs/libcdio-paranoia; then
@@ -93,6 +96,7 @@ src_configure() {
 		-DUSE_COVER="$(usex cover)"
 		-DUSE_CUE="$(usex cue)"
 		-DUSE_CURL="$(usex curl)"
+		-DUSE_DBUS="$(usex dbus)"
 		-DUSE_ENCA="$(usex enca)"
 		-DUSE_FFMPEG="$(usex ffmpeg)"
 		-DUSE_FLAC="$(usex flac)"
@@ -103,7 +107,7 @@ src_configure() {
 		-DUSE_LADSPA="$(usex ladspa)"
 		-DUSE_LYRICS="$(usex lyrics)"
 		-DUSE_MAD="$(usex mad)"
-		-DUSE_MIDI="$(usex midi)"
+		-DUSE_MIDI_WILDMIDI="$(usex midi)"
 		-DUSE_MPLAYER="$(usex mplayer)"
 		-DUSE_MMS="$(usex mms)"
 		-DUSE_MODPLUG="$(usex modplug)"
@@ -117,10 +121,10 @@ src_configure() {
 		-DUSE_QSUI="$(usex qsui)"
 		-DUSE_SCROBBLER="$(usex scrobbler)"
 		-DUSE_SNDFILE="$(usex sndfile)"
-		-DUSE_SOXR="$(usex soxr)"
 		-DUSE_STEREO="$(usex stereo)"
 		-DUSE_STATICON="$(usex tray)"
 		-DUSE_UDISKS2="$(usex udisks)"
+		-DUSE_SRC="$(usex libsamplerate)"
 		-DUSE_VORBIS="$(usex vorbis)"
 		-DUSE_WAVPACK="$(usex wavpack)"
 	)
