@@ -344,11 +344,6 @@ net-print/foomatic-filters
 # google code, no dependencies.
 dev-python/pssi
 
-# Johannes Huber <johu@gentoo.org> (04 Nov 2016)
-# Masked for reomval in 30 days. Superseded by kde-plasma/plasma-nm.
-# Only support for deprecated Plasma 4. Exported to kde-sunset overlay.
-kde-misc/networkmanagement
-
 # Tim Harder <radhermit@gentoo.org> (03 Nov 2016)
 # Masked for testing
 =sys-fs/fuse-3.0.0*
@@ -362,22 +357,6 @@ net-misc/bgpq
 # This was renamed by upstream years ago to jnr-ffi, which we have
 # long had a package for. Removal in 30 days.
 dev-java/jaffl
-
-# David Seifert <soap@gentoo.org> (29 Oct 2016)
-# Unmaintained, broken, do not work with GCC 6
-# Bugs #594506, #597780, removal in 30 days.
-<dev-cpp/xsd-4.0.0
-<dev-cpp/libxsd-frontend-2.0.0
-dev-cpp/libfrontend-elements
-dev-cpp/libbackend-elements
-dev-cpp/libcult
-<dev-util/build-0.3.10
-
-# David Seifert <soap@gentoo.org> (29 Oct 2016)
-# Unmaintained, depends on ancient and broken C++ libraries
-# Removal in 30 days.
-net-libs/libkolab
-net-libs/libkolabxml
 
 # Lars Wendler <polynomial-c@gentoo.org> (27 Oct 2016)
 # Breaks build of some packages. See tracker bug #598186
