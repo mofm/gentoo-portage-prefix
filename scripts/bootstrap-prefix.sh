@@ -948,6 +948,10 @@ bootstrap_zlib_core() {
 		# rpath ordering issues.
 		rm -f "${ROOT}"/tmp/usr/lib/libz.so.1
 	fi
+	if [[ ${CHOST} == *-cygwin* ]]; then
+		# No proper Cygwin support in zlib makefiles
+		ln -s libz.so "${ROOT}"/tmp/usr/lib/libz.dll
+	fi
 
 	einfo "${A%-*} bootstrapped"
 }
@@ -1620,24 +1624,7 @@ EOF
 	esac
 
 	if [[ ${CHOST} == *-cygwin* ]]; then
-		have_cygfork=false
 		if [[ -r /var/run/cygfork/. ]]; then
-			if [[ -e /var/run/cygfork/.needed ]] ||
-			   [[ -e /var/run/cygfork/.unchecked ]]
-			then
-				cygfork_clean=:
-			else
-			  > /var/run/cygfork/.needed
-			  cygfork_clean='rm -f /var/run/cygfork/.needed'
-			fi
-			if ( [[ -n $(ls /var/run/cygfork/*/*/*.exe 2>/dev/null) ]] )
-			then
-				have_cygfork=true
-			fi
-			${cygfork_clean}
-		fi
-
-		if ${have_cygfork}; then
 			cat << EOF
 
 Whoah there, I've found the working fork() in your Cygwin instance,
