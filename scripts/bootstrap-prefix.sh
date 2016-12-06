@@ -935,11 +935,15 @@ bootstrap_zlib_core() {
 		makeopts=(
 			-f win32/Makefile.gcc
 			SHARED_MODE=1
+			SHAREDLIB=libz.dll
+			IMPLIB=libz.dll.a
 			BINARY_PATH="${ROOT}"/tmp/usr/bin
 			INCLUDE_PATH="${ROOT}"/tmp/usr/include
 			LIBRARY_PATH="${ROOT}"/tmp/usr/lib
 			"${makeopts[@]}"
 		)
+		# stage1 python searches for lib/libz.dll
+		ln -sf libz.dll.a "${ROOT}"/tmp/usr/lib/libz.dll
 	fi
 
 	einfo "Compiling ${A%-*}"
@@ -1271,6 +1275,18 @@ do_emerge_pkgs() {
 			emerge -v --oneshot --root-deps ${opts} "${pkg}" 
 		)
 		[[ $? -eq 0 ]] || return 1
+
+		case ${pkg},${CHOST} in
+		app-shells/bash,*-cygwin*)
+			# Cygwin would resolve 'bin/bash' to 'bin/bash.exe', but
+			# merging bin/bash.exe does not replace the bin/bash symlink.
+			# When we can execute both bin/bash and bin/bash.exe, but
+			# they are different files, then we need to drop the symlink.
+			[[ -x ${EPREFIX}/bin/bash && -x ${EPREFIX}/bin/bash.exe &&
+			 !    ${EPREFIX}/bin/bash  -ef  ${EPREFIX}/bin/bash.exe ]] &&
+				rm -f "${EPREFIX}"/bin/bash
+			;;
+		esac
 	done
 }
 
