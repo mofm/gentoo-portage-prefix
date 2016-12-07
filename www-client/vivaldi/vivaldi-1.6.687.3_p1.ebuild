@@ -10,7 +10,7 @@ CHROMIUM_LANGS="
 "
 inherit chromium-2 eutils multilib unpacker toolchain-funcs
 
-#VIVALDI_BRANCH="snapshot"
+VIVALDI_BRANCH="snapshot"
 
 VIVALDI_PN="${PN}-${VIVALDI_BRANCH:-stable}"
 VIVALDI_BIN="${PN}${VIVALDI_BRANCH/snapshot/-snapshot}"
@@ -25,7 +25,7 @@ SRC_URI="
 
 LICENSE="Vivaldi"
 SLOT="0"
-KEYWORDS="-* amd64 x86"
+KEYWORDS="-* ~amd64 ~x86"
 
 RESTRICT="bindist mirror"
 
@@ -81,6 +81,7 @@ src_prepare() {
 	rm \
 		_gpgbuilder \
 		etc/cron.daily/${VIVALDI_BIN} \
+		${VIVALDI_HOME}/libwidevinecdm.so \
 		|| die
 	rmdir \
 		etc/cron.daily/ \
