@@ -55,6 +55,10 @@ DEPEND="${COMMON_DEPEND}
 	dev-util/intltool
 	theme-manager? ( dev-util/monodevelop )"
 
+PATCHES=(
+	"${FILESDIR}/hexchat-2.12.2-configure.ac-remove-werror.patch"
+)
+
 src_prepare() {
 	default
 	eautoreconf
