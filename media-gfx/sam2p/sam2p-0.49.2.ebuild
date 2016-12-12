@@ -11,7 +11,7 @@ SRC_URI="https://sam2p.googlecode.com/files/${P}.tar.gz"
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="alpha amd64 arm hppa ia64 ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~x86-fbsd"
+KEYWORDS="~alpha ~amd64 ~arm ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~x86-fbsd"
 IUSE="examples gif"
 
 RDEPEND=""
@@ -23,7 +23,6 @@ src_prepare() {
 	epatch \
 		"${FILESDIR}"/${PN}-0.45-fbsd.patch \
 		"${FILESDIR}"/${PN}-0.49.1-build.patch \
-		"${FILESDIR}"/${PN}-0.49.1-gcc48.patch \
 		"${FILESDIR}"/${PN}-0.49-glibc-2.20.patch
 	eautoreconf
 	tc-export CXX
