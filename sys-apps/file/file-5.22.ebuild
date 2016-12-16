@@ -1,9 +1,9 @@
 # Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-apps/file/file-5.22.ebuild,v 1.12 2015/04/08 18:27:33 mgorny Exp $
+# $Id$
 
 EAPI="4"
-PYTHON_COMPAT=( python{2_7,3_3,3_4} )
+PYTHON_COMPAT=( python{2_7,3_4} )
 DISTUTILS_OPTIONAL=1
 
 inherit eutils distutils-r1 libtool toolchain-funcs multilib-minimal
@@ -14,7 +14,7 @@ if [[ ${PV} == "9999" ]] ; then
 else
 	SRC_URI="ftp://ftp.astron.com/pub/file/${P}.tar.gz
 		ftp://ftp.gw.com/mirrors/pub/unix/file/${P}.tar.gz"
-	KEYWORDS="~ppc-aix ~x64-freebsd ~x86-freebsd ~hppa-hpux ~ia64-hpux ~x86-interix ~amd64-linux ~ia64-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~m68k-mint ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
+	KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
 fi
 
 DESCRIPTION="identify a file's format by scanning binary data for patterns"
@@ -32,14 +32,6 @@ RDEPEND="${DEPEND}
 	python? ( !dev-python/python-magic )"
 
 src_prepare() {
-	epatch "${FILESDIR}"/${PN}-5.00-strtoull.patch
-	epatch "${FILESDIR}"/${PN}-5.22-sig_t.patch
-	# avoid eautoreconf when adding check for strtoull #263527
-	sed -i 's/ strtoul / strtoul strtoull __strtoull /' configure
-	sed -i "/#undef HAVE_STRTOUL\$/a#undef HAVE_STRTOULL\n#undef HAVE___STRTOULL" config.h.in
-	# Solaris has no sig_t
-	[[ ${CHOST} == *-solaris* ]] && sed -i -e 's/sig_t/void */' src/compress.c
-
 	[[ ${PV} == "9999" ]] && eautoreconf
 	elibtoolize
 
