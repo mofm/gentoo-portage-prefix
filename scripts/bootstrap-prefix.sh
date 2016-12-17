@@ -454,7 +454,7 @@ do_tree() {
 bootstrap_tree() {
 	# RAP uses the latest gentoo main repo snapshot to bootstrap.
 	is-rap && LATEST_TREE_YES=1
-	local PV="20161114"
+	local PV="20161216"
 	if [[ -n ${LATEST_TREE_YES} ]]; then
 		do_tree "${SNAPSHOT_URL}" portage-latest.tar.bz2
 	else
@@ -1516,6 +1516,12 @@ bootstrap_stage3() {
 	LDFLAGS="${LDFLAGS} $(rapx -Wl,--dynamic-linker=${RAP_DLINKER})" \
 	emerge_pkgs --nodeps ${compiler} || return 1
 	# undo libgcc_s.so path of stage2
+
+	# On Darwin we have llvm-3.5 at this point, which provides nm.
+	# However for some reason this nm doesn't quite get it on newer
+	# platforms at least, resulting in bugs like #598336.  To cater for
+	# that, get rid of this nm and rely on the host one at this stage
+	[[ ${CHOST} == *-darwin* ]] && rm -f "${ROOT}"/usr/bin/{,${CHOST}-}nm
 
 	rm -f "${ROOT}"/etc/ld.so.conf.d/stage2.conf
 	if is-rap ; then
