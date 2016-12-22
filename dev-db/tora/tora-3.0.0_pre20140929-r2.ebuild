@@ -11,16 +11,16 @@ if [[ ${PV} == 9999 ]]; then
 	inherit subversion
 	SRC_URI=""
 else
-	SRC_URI="mirror://sourceforge/${PN}/${P}.tar.gz"
+	SRC_URI="https://dev.gentoo.org/~pinkbyte/distfiles/snapshots/${P}.tar.xz"
 fi
 
 DESCRIPTION="TOra - Toolkit For Oracle"
 HOMEPAGE="http://torasql.com/"
-IUSE="debug mysql oracle oci8-instant-client postgres"
+IUSE="debug mysql postgres"
 
 SLOT="0"
 LICENSE="GPL-2"
-KEYWORDS=""
+KEYWORDS="~amd64 ~x86"
 
 RDEPEND="
 	dev-libs/ferrisloki
@@ -28,7 +28,7 @@ RDEPEND="
 	dev-qt/qtgui:4
 	dev-qt/qtsql:4[mysql?,postgres?]
 	dev-qt/qtxmlpatterns:4
-	oci8-instant-client? ( dev-db/oracle-instantclient-basic )
+	=dev-db/oracle-instantclient-basic-11*
 	postgres? ( dev-db/postgresql:* )
 "
 DEPEND="
@@ -37,13 +37,11 @@ DEPEND="
 "
 
 pkg_setup() {
-	if ( use oracle || use oci8-instant-client ) && [ -z "$ORACLE_HOME" ] ; then
+	if [ -z "$ORACLE_HOME" ] ; then
 		eerror "ORACLE_HOME variable is not set."
 		eerror
 		eerror "You must install Oracle >= 8i client for Linux in"
 		eerror "order to compile TOra with Oracle support."
-		eerror
-		eerror "Otherwise specify -oracle in your USE variable."
 		eerror
 		eerror "You can download the Oracle software from"
 		eerror "http://otn.oracle.com/software/content.html"
@@ -55,8 +53,6 @@ src_prepare() {
 	sed -i \
 		-e "/COPYING/ d" \
 		CMakeLists.txt || die "Removal of COPYING file failed"
-	# 'svn info' needs .svn subdirectory
-	[[ ${PV} != 9999 ]] || cp -a "${ESVN_WC_PATH}"/.svn .svn || die
 	# bug 547520
 	grep -rlZ '$$ORIGIN' . | xargs -0 sed -i 's|:$$ORIGIN[^:"]*||' || \
 		die 'Removal of $$ORIGIN failed'
@@ -64,11 +60,7 @@ src_prepare() {
 
 src_configure() {
 	local mycmakeargs=()
-	if use oracle || use oci8-instant-client ; then
-		mycmakeargs=(-DENABLE_ORACLE=ON)
-	else
-		mycmakeargs=(-DENABLE_ORACLE=OFF)
-	fi
+	mycmakeargs=(-DENABLE_ORACLE=ON)
 	mycmakeargs+=(
 		-DWANT_RPM=OFF
 		-DWANT_BUNDLE=OFF
@@ -87,6 +79,7 @@ src_configure() {
 
 src_install() {
 	cmake-utils_src_install
-	doicon src/icons/${PN}.xpm
-	domenu src/${PN}.desktop
+	#
+	doicon src/icons/${PN}.xpm || die
+	domenu src/${PN}.desktop || die
 }
