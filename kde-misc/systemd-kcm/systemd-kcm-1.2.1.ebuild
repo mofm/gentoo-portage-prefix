@@ -4,6 +4,7 @@
 
 EAPI=6
 
+CMAKE_MIN_VERSION="3.0.0"
 inherit kde5
 
 DESCRIPTION="Plasma control module for systemd"
