@@ -4,6 +4,7 @@
 
 EAPI="5"
 
+CMAKE_MIN_VERSION="2.8.5"
 PYTHON_COMPAT=( python2_7 )
 PLOCALES="no sl sv"
 
