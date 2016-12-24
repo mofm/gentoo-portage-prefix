@@ -4,6 +4,8 @@
 
 EAPI=6
 
+CMAKE_MIN_VERSION="2.8.8"
+
 inherit cmake-utils
 
 LICENSE="MIT"
