@@ -4,6 +4,8 @@
 
 EAPI="6"
 
+CMAKE_MIN_VERSION="2.8.5"
+
 inherit cmake-utils eutils
 
 DESCRIPTION="Daemon of the CDEmu optical media image mounting suite"
