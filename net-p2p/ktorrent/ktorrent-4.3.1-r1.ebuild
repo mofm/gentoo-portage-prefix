@@ -38,7 +38,7 @@ HOMEPAGE="http://ktorrent.pwsp.net/"
 
 LICENSE="GPL-2"
 SLOT="4"
-IUSE="+bwscheduler debug +downloadorder +infowidget +ipfilter +logviewer
+IUSE="+bwscheduler debug +downloadorder +infowidget +ipfilter +kross +logviewer
 +magnetgenerator +mediaplayer rss +scanfolder +search +stats +upnp webinterface
 +zeroconf"
 
@@ -63,6 +63,7 @@ RDEPEND="${COMMONDEPEND}
 		app-arch/unzip
 		$(add_kdeapps_dep kdebase-kioslaves)
 	)
+	kross? ( $(add_kdebase_dep krosspython) )
 "
 
 PATCHES=(
@@ -80,13 +81,13 @@ src_prepare() {
 
 src_configure() {
 	mycmakeargs=(
-		-DENABLE_SHUTDOWN_PLUGIN=OFF
-		-DENABLE_SCRIPTING_PLUGIN=OFF
+		-D_ENABLE_SHUTDOWN_PLUGIN=OFF
 		$(cmake-utils_use_enable bwscheduler BWSCHEDULER_PLUGIN)
 		$(cmake-utils_use_enable downloadorder DOWNLOADORDER_PLUGIN)
 		$(cmake-utils_use_enable infowidget INFOWIDGET_PLUGIN)
 		$(cmake-utils_use_with infowidget SYSTEM_GEOIP)
 		$(cmake-utils_use_enable ipfilter IPFILTER_PLUGIN)
+		$(cmake-utils_use_enable kross SCRIPTING_PLUGIN)
 		$(cmake-utils_use_enable logviewer LOGVIEWER_PLUGIN)
 		$(cmake-utils_use_enable magnetgenerator MAGNETGENERATOR_PLUGIN)
 		$(cmake-utils_use_enable mediaplayer MEDIAPLAYER_PLUGIN)
