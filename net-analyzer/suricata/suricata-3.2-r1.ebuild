@@ -34,6 +34,7 @@ DEPEND="
 	nfqueue?    ( net-libs/libnetfilter_queue )
 	redis?      ( dev-libs/hiredis )
 	logrotate?      ( app-admin/logrotate )
+	sys-libs/libcap-ng
 "
 # #446814
 #	prelude?    ( dev-libs/libprelude )
@@ -119,8 +120,6 @@ src_install() {
 
 	dodir "/var/lib/${PN}"
 	dodir "/var/log/${PN}"
-	dodir "/var/log/${PN}" \
-		"/var/lib/${PN}"
 
 	fowners -R ${PN}: "/var/lib/${PN}" "/var/log/${PN}" "/etc/${PN}"
 	fperms 750 "/var/lib/${PN}" "/var/log/${PN}" "/etc/${PN}"
@@ -151,11 +150,13 @@ pkg_postinst() {
 	elog "You can create as many ${PN}.foo* services as you wish."
 
 	if use logrotate; then
-		elog "You enabled the logrotate USE flag. Please make sure you correctly set up the ${PN} logortate config file in /etc/logrotate.d/."
+		elog "You enabled the logrotate USE flag. Please make sure you correctly set up the ${PN} logrotate config file in /etc/logrotate.d/."
 	fi
 
 	if use debug; then
 		elog "You enabled the debug USE flag. Please read this link to report bugs upstream:"
 		elog "https://redmine.openinfosecfoundation.org/projects/suricata/wiki/Reporting_Bugs"
+		elog "You need to also ensure the FEATURES variable in make.conf contains the"
+		elog "'nostrip' option to produce useful core dumps or back traces."
 	fi
 }
