@@ -15,7 +15,7 @@ SRC_URI="
 
 LICENSE="Apache-2.0"
 SLOT="0"
-KEYWORDS="amd64 x86"
+KEYWORDS="~amd64 ~x86"
 IUSE="puppetdb selinux"
 RESTRICT="strip"
 
@@ -31,6 +31,7 @@ DEPEND="
 RDEPEND="${CDEPEND}
 	app-portage/eix
 	sys-apps/dmidecode
+	sys-libs/glibc
 	selinux? (
 		sys-libs/libselinux[ruby]
 		sec-policy/selinux-puppet
