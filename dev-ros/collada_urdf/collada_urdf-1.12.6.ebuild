@@ -9,18 +9,21 @@ ROS_SUBDIR=${PN}
 
 inherit ros-catkin
 
-DESCRIPTION="C++ parser for the Collada robot description format"
+DESCRIPTION="Tool to convert Unified Robot Description Format (URDF) documents into COLLADA documents"
 LICENSE="BSD"
 SLOT="0"
 IUSE=""
 
 RDEPEND="
 	dev-libs/boost:=
-	>=dev-ros/urdf_parser_plugin-1.12.6
-	dev-ros/roscpp
-	dev-ros/class_loader
-	dev-libs/urdfdom_headers
+	dev-ros/angles
+	dev-ros/collada_parser
+	dev-ros/resource_retriever
+	dev-ros/urdf
+	dev-ros/geometric_shapes
+	dev-ros/tf
+	media-libs/assimp
+	dev-libs/tinyxml
 	dev-libs/collada-dom
-	>=dev-ros/urdf-1.12.6
 "
 DEPEND="${RDEPEND}"
