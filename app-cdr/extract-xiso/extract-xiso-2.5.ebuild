@@ -1,18 +1,18 @@
-# Copyright 1999-2008 Gentoo Foundation
+# Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/app-cdr/extract-xiso/extract-xiso-2.5.ebuild,v 1.4 2008/10/25 20:55:24 vapier Exp $
+# $Id$
 
 inherit toolchain-funcs
 
 MY_PV=${PV/_beta/b}
 
 DESCRIPTION="Tool for extracting and creating optimised Xbox ISO images"
-HOMEPAGE="http://sourceforge.net/projects/extract-xiso"
+HOMEPAGE="https://sourceforge.net/projects/extract-xiso"
 SRC_URI="mirror://sourceforge/extract-xiso/${PN}_v${MY_PV}_src.tgz"
 
-LICENSE="BSD"
+LICENSE="BSD-4"
 SLOT="0"
-KEYWORDS="~x86-interix ~amd64-linux ~x86-linux ~ppc-macos"
+KEYWORDS="amd64 ppc x86"
 IUSE=""
 
 S=${WORKDIR}/${PN}
@@ -23,10 +23,6 @@ src_unpack() {
 	sed -i \
 		-e 's:__LINUX__:__linux__:' \
 		*.[ch] */*.[ch] || die
-	epatch "${FILESDIR}"/${P}-darwin.patch
-	epatch "${FILESDIR}"/${P}-interix.patch
-	# older interix versions need some help...
-	[[ ${CHOST} == *-interix[35]* ]] && epatch "${FILESDIR}"/${P}-interix5.patch
 }
 
 doit() { echo "$@"; "$@"; }

@@ -1,6 +1,6 @@
-# Copyright 1999-2011 Gentoo Foundation
+# Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/dev-lisp/clisp/clisp-2.48-r2.ebuild,v 1.4 2011/03/29 12:17:01 angelos Exp $
+# $Id$
 
 EAPI="2"
 
@@ -12,7 +12,7 @@ SRC_URI="mirror://sourceforge/${PN}/${P}.tar.bz2"
 
 LICENSE="GPL-2"
 SLOT="2"
-KEYWORDS="~x86-macos"
+KEYWORDS="~alpha amd64 ~ia64 ~ppc -sparc x86"
 IUSE="berkdb hyperspec X new-clx dbus fastcgi gdbm gtk pari +pcre postgres +readline svm -threads +unicode +zlib"
 
 RDEPEND="virtual/libiconv
@@ -23,7 +23,7 @@ RDEPEND="virtual/libiconv
 		 gdbm? ( sys-libs/gdbm )
 		 gtk? ( >=x11-libs/gtk+-2.10:2 >=gnome-base/libglade-2.6:2.0 )
 		 pari? ( >=sci-mathematics/pari-2.3.0 )
-		 postgres? ( >=dev-db/postgresql-base-8.0 )
+		 postgres? ( >=dev-db/postgresql-8.0 )
 		 readline? ( >=sys-libs/readline-5.0 )
 		 pcre? ( dev-libs/libpcre )
 		 svm? ( sci-libs/libsvm )
@@ -57,6 +57,7 @@ src_prepare() {
 	if use alpha || use ia64; then
 		sed -i -e 's/-O2//g' src/makemake.in || die
 	fi
+	epatch "${FILESDIR}/${P}-bits_ipctypes_to_sys_ipc.patch"
 }
 
 src_configure() {
@@ -67,11 +68,7 @@ src_configure() {
 	fi
 
 	# QA issue with lisp.run
-	case $($(tc-getAS) -v 2>&1 </dev/null) in
-		*"GNU Binutils"*) # GNU ld
-			append-flags -Wa,--noexecstack
-		;;
-	esac
+	append-flags -Wa,--noexecstack
 
 	# built-in features
 	local myconf="--with-ffcall --without-dynamic-modules"
@@ -112,14 +109,13 @@ src_configure() {
 	use zlib && enable_modules zlib
 
 	if use hyperspec; then
-		CLHSROOT="file://${EPREFIX}/usr/share/doc/hyperspec/HyperSpec/"
+		CLHSROOT="file:///usr/share/doc/hyperspec/HyperSpec/"
 	else
 		CLHSROOT="http://www.lispworks.com/reference/HyperSpec/"
 	fi
 
-
 	# configure chokes on --sysconfdir option
-	local configure="./configure --prefix=${EPREFIX}/usr --libdir=${EPREFIX}/usr/$(get_libdir) \
+	local configure="./configure --prefix=/usr --libdir=/usr/$(get_libdir) \
 		$(use_with readline) $(use_with unicode) \
 		${myconf} --hyperspec=${CLHSROOT} ${BUILDDIR}"
 	einfo "${configure}"
@@ -127,7 +123,7 @@ src_configure() {
 
 	sed -i 's,"vi","nano",g' "${BUILDDIR}"/config.lisp || die
 
-	IMPNOTES="file://${EROOT%/}/usr/share/doc/${PN}-${PVR}/html/impnotes.html"
+	IMPNOTES="file://${ROOT%/}/usr/share/doc/${PN}-${PVR}/html/impnotes.html"
 	sed -i "s,http://clisp.cons.org/impnotes/,${IMPNOTES},g" \
 		"${BUILDDIR}"/config.lisp || die
 }
@@ -141,7 +137,7 @@ src_compile() {
 
 src_install() {
 	pushd "${BUILDDIR}"
-	make DESTDIR="${D}" prefix="${EPREFIX}"/usr install-bin || die
+	make DESTDIR="${D}" prefix=/usr install-bin || die
 	doman clisp.1 || die
 	dodoc SUMMARY README* NEWS MAGIC.add ANNOUNCE || die
 	fperms a+x /usr/$(get_libdir)/clisp-${PV/_*/}/clisp-link || die
@@ -162,7 +158,7 @@ it is likely that you will encounter bugs in using them. If you do,
 please report bugs upstream:
 
 Mailing list: https://lists.sourceforge.net/lists/listinfo/clisp-devel
-Bug tracker:  http://sourceforge.net/tracker/?atid=101355&group_id=1355
+Bug tracker:  https://sourceforge.net/tracker/?atid=101355&group_id=1355
 
 EOF
 	fi

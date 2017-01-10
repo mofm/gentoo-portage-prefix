@@ -1,9 +1,9 @@
-# Copyright 1999-2012 Gentoo Foundation
+# Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/dev-lisp/common-lisp-controller/common-lisp-controller-5.13-r1.ebuild,v 1.8 2012/04/07 10:20:00 neurogeek Exp $
+# $Id$
 
 EAPI="3"
-inherit eutils prefix
+inherit eutils
 
 DESCRIPTION="Common Lisp Controller"
 HOMEPAGE="http://packages.debian.org/unstable/devel/common-lisp-controller"
@@ -11,7 +11,7 @@ SRC_URI="mirror://gentoo/common-lisp-controller_${PV}.tar.gz"
 
 LICENSE="LLGPL-2.1"
 SLOT="0"
-KEYWORDS="~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~x86-solaris"
+KEYWORDS="alpha amd64 ia64 ~mips ppc ppc64 sparc x86"
 IUSE=""
 
 DEPEND="|| ( >=sys-apps/coreutils-8.15 app-misc/realpath )
@@ -23,18 +23,6 @@ S=${WORKDIR}/${PN}
 
 src_unpack() {
 	unpack ${A}
-	cd "${S}"
-	epatch "${FILESDIR}"/${PV}/prefix.patch
-	eprefixify \
-		clc-register-user-package \
-		clc-unregister-user-package \
-		register-common-lisp-implementation \
-		clc-update-customized-images \
-		common-lisp-controller.lisp \
-		post-sysdef-install.lisp \
-		register-common-lisp-source \
-		unregister-common-lisp-implementation \
-		unregister-common-lisp-source
 	cd "${S}/man"
 	ln -s clc-{,un}register-user-package.1
 	for i in unregister-common-lisp-implementation {,un}register-common-lisp-source; do
@@ -63,13 +51,13 @@ src_install() {
 }
 
 pkg_postinst() {
-	test -d "${EPREFIX}"/var/cache/common-lisp-controller \
-		|| mkdir "${EPREFIX}"/var/cache/common-lisp-controller
-	chmod 1777 "${EPREFIX}"/var/cache/common-lisp-controller
+	test -d /var/cache/common-lisp-controller \
+		|| mkdir /var/cache/common-lisp-controller
+	chmod 1777 /var/cache/common-lisp-controller
 
 	# This code from ${S}/debian/postinst
 
-	for compiler in "${EPREFIX}"/usr/lib/common-lisp/bin/*.sh
+	for compiler in /usr/lib/common-lisp/bin/*.sh
 	do
 		if [ -f "${compiler}" -a -r "${compiler}" -a -x "${compiler}" ] ; then
 			i=${compiler##*/}
@@ -83,9 +71,9 @@ pkg_postinst() {
 	# This code from ${S}/debian/preinst
 
 	# cleanup fasl files:
-	( find "${EPREFIX}"/usr/share/common-lisp/source/defsystem \
-		"${EPREFIX}"/usr/share/common-lisp/source/asdf \
-		"${EPREFIX}"/usr/share/common-lisp/source/common-lisp-controller -type f -not -name "*.lisp" -print0 \
+	( find /usr/share/common-lisp/source/defsystem \
+		/usr/share/common-lisp/source/asdf \
+		/usr/share/common-lisp/source/common-lisp-controller -type f -not -name "*.lisp" -print0 \
 		| xargs --null rm --force 2> /dev/null ) &>/dev/null
 
 	# remove old autobuild files:
@@ -95,14 +83,14 @@ pkg_postinst() {
 #		| xargs rmdir 2> /dev/null || true
 
 	# remove old fals files:
-	test -d "${EPREFIX}"/usr/lib/common-lisp-controller \
-		&& rmdir --ignore-fail-on-non-empty "${EPREFIX}"/usr/lib/common-lisp-controller
-	for compiler in "${EPREFIX}"/usr/lib/common-lisp/bin/*.sh ; do
+	test -d /usr/lib/common-lisp-controller \
+		&& rmdir --ignore-fail-on-non-empty /usr/lib/common-lisp-controller
+	for compiler in /usr/lib/common-lisp/bin/*.sh ; do
 		if [ -f "$compiler" -a -r "$compiler" ] ; then
 			i=${compiler##*/}
 			i=${i%.sh}
-			if [ -d "${EPREFIX}/usr/lib/common-lisp/${i}" ] ; then
-				rm -rf "${EPREFIX}/usr/lib/common-lisp/${i}"
+			if [ -d "/usr/lib/common-lisp/${i}" ] ; then
+				rm -rf "/usr/lib/common-lisp/${i}"
 			fi
 		fi
 	done
