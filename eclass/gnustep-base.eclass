@@ -1,6 +1,6 @@
 # Copyright 1999-2012 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/eclass/gnustep-base.eclass,v 1.27 2012/06/22 12:41:51 voyageur Exp $
+# $Id$
 
 # @ECLASS: gnustep-base.eclass
 # @MAINTAINER:
@@ -62,6 +62,8 @@ gnustep-base_src_prepare() {
 			GNUmakefile
 		eend $?
 	fi
+
+	has ${EAPI:-0} 6 && default
 }
 
 gnustep-base_src_configure() {
@@ -147,7 +149,6 @@ egnustep_env() {
 			HOME="${T}" \
 			GNUSTEP_CONFIG_FILE="${WORKDIR}"/GNUstep.conf \
 			GNUSTEP_INSTALLATION_DOMAIN=SYSTEM \
-			GNUSTEP_ABSOLUTE_INSTALL_PATHS=yes \
 			TAR_OPTIONS="${TAR_OPTIONS} --no-same-owner" \
 			messages=yes )
 

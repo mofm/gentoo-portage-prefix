@@ -1,6 +1,6 @@
 # Copyright 1999-2012 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/eclass/common-lisp-common.eclass,v 1.15 2012/06/02 19:16:31 zmedico Exp $
+# $Id$
 #
 # Author Matthew Kennedy <mkennedy@gentoo.org>
 #
@@ -155,7 +155,7 @@ reregister-all-common-lisp-implementations() {
 impl-save-timestamp-hack() {
 	local impl=$1
 	dodir /usr/share/${impl}
-	tar cpjf "${ED}"/usr/share/${impl}/portage-timestamp-compensate -C "${ED}"/usr/$(get_libdir)/${impl} .
+	tar cpjf "${D}"/usr/share/${impl}/portage-timestamp-compensate -C "${D}"/usr/$(get_libdir)/${impl} .
 }
 
 impl-restore-timestamp-hack() {

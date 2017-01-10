@@ -1,8 +1,8 @@
-# Copyright 1999-2014 Gentoo Foundation
+# Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/eclass/games.eclass,v 1.159 2014/11/21 21:47:16 hasufell Exp $
+# $Id$
 
-# @ECLASS: games
+# @ECLASS: games.eclass
 # @MAINTAINER:
 # Games team <games@gentoo.org>
 # @BLURB: Standardizing the install of games.
@@ -19,6 +19,11 @@
 #
 # For a general guide on writing games ebuilds, see:
 # https://wiki.gentoo.org/wiki/Project:Games/Ebuild_howto
+#
+# WARNING: This eclass is DEPRECATED and must not be used by new games
+# ebuilds, bug #574082. When writing game ebuilds, no specific eclass
+# is needed. For more details, see the QA team policies page:
+# https://wiki.gentoo.org/wiki/Project:Quality_Assurance/Policies#Games
 
 
 if [[ -z ${_GAMES_ECLASS} ]]; then
@@ -29,7 +34,7 @@ inherit base multilib toolchain-funcs eutils user
 case ${EAPI:-0} in
 	0|1) EXPORT_FUNCTIONS pkg_setup src_compile pkg_preinst pkg_postinst ;;
 	2|3|4|5) EXPORT_FUNCTIONS pkg_setup src_configure src_compile pkg_preinst pkg_postinst ;;
-	*) die "no support for EAPI=${EAPI} yet" ;;
+	*) die "games.eclass is banned in EAPI=${EAPI}, see https://wiki.gentoo.org/wiki/Project:Quality_Assurance/Policies#Games" ;;
 esac
 
 if [[ ${CATEGORY}/${PN} != "games-misc/games-envd" ]] ; then
@@ -137,11 +142,11 @@ egamesconf() {
 	fi
 
 	econf \
-		--prefix="${EPREFIX}${GAMES_PREFIX}" \
-		--libdir="${EPREFIX}$(games_get_libdir)" \
-		--datadir="${EPREFIX}${GAMES_DATADIR}" \
-		--sysconfdir="${EPREFIX}${GAMES_SYSCONFDIR}" \
-		--localstatedir="${EPREFIX}${GAMES_STATEDIR}" \
+		--prefix="${GAMES_PREFIX}" \
+		--libdir="$(games_get_libdir)" \
+		--datadir="${GAMES_DATADIR}" \
+		--sysconfdir="${GAMES_SYSCONFDIR}" \
+		--localstatedir="${GAMES_STATEDIR}" \
 		${_gamesconf} \
 		"$@"
 }
@@ -219,13 +224,13 @@ games_make_wrapper() { gameswrapper ${FUNCNAME/games_} "$@"; }
 # Run 'chown' with the given args on the given files. Owner and
 # group are GAMES_USER and GAMES_GROUP and must not be passed
 # as args.
-gamesowners() { use prefix || chown ${GAMES_USER}:${GAMES_GROUP} "$@"; }
+gamesowners() { chown ${GAMES_USER}:${GAMES_GROUP} "$@"; }
 
 # @FUNCTION: gamesperms
 # @USAGE: <path>...
 # @DESCRIPTION:
 # Run 'chmod' with games specific permissions on the given files.
-gamesperms() { use prefix || chmod u+rw,g+r-w,o-rwx "$@"; }
+gamesperms() { chmod u+rw,g+r-w,o-rwx "$@"; }
 
 # @FUNCTION: prepgamesdirs
 # @DESCRIPTION:
@@ -238,37 +243,38 @@ prepgamesdirs() {
 		"${GAMES_SYSCONFDIR}" "${GAMES_STATEDIR}" "$(games_get_libdir)" \
 		"${GAMES_BINDIR}" "$@"
 	do
-		[[ ! -d ${ED}/${dir} ]] && continue
-		use prefix || (
-			gamesowners -R "${ED}/${dir}"
-			find "${ED}/${dir}" -type d -print0 | xargs -0 chmod 750
+		[[ ! -d ${D}/${dir} ]] && continue
+		(
+			gamesowners -R "${D}/${dir}"
+			find "${D}/${dir}" -type d -print0 | xargs -0 chmod 750
 			mode=o-rwx,g+r,g-w
 			[[ ${dir} = ${GAMES_STATEDIR} ]] && mode=o-rwx,g+r
-			find "${ED}/${dir}" -type f -print0 | xargs -0 chmod $mode
+			find "${D}/${dir}" -type f -print0 | xargs -0 chmod $mode
 
-			# common trees should not be games owned #264872
-			if [[ ${dir} == "${GAMES_PREFIX_OPT}" ]] ; then
-				fowners root:root "${dir}"
-				fperms 755 "${dir}"
+			# common trees should not be games owned #264872 #537580
+			fowners root:0 "${dir}"
+			fperms 755 "${dir}"
+			if [[ ${dir} == "${GAMES_PREFIX}" \
+						|| ${dir} == "${GAMES_PREFIX_OPT}" ]] ; then
 				for d in $(get_libdir) bin ; do
 					# check if dirs exist to avoid "nonfatal" option
-					if [[ -e ${ED}/${dir}/${d} ]] ; then
-						fowners root:root "${dir}/${d}"
+					if [[ -e ${D}/${dir}/${d} ]] ; then
+						fowners root:0 "${dir}/${d}"
 						fperms 755 "${dir}/${d}"
 					fi
 				done
 			fi
 		) &>/dev/null
 
-		f=$(find "${ED}/${dir}" -perm +4000 -a -uid 0 2>/dev/null)
+		f=$(find "${D}/${dir}" -perm +4000 -a -uid 0 2>/dev/null)
 		if [[ -n ${f} ]] ; then
 			eerror "A game was detected that is setuid root!"
 			eerror "${f}"
 			die "refusing to merge a setuid root game"
 		fi
 	done
-	[[ -d ${ED}/${GAMES_BINDIR} ]] || return 0
-	use prefix || find "${D}/${GAMES_BINDIR}" -maxdepth 1 -type f -exec chmod 750 '{}' \;
+	[[ -d ${D}/${GAMES_BINDIR} ]] || return 0
+	find "${D}/${GAMES_BINDIR}" -maxdepth 1 -type f -exec chmod 750 '{}' \;
 }
 
 # @FUNCTION: games_pkg_setup
@@ -276,25 +282,19 @@ prepgamesdirs() {
 # Export some toolchain specific variables and create games related groups
 # and users. This function is exported as pkg_setup().
 games_pkg_setup() {
-	if has "${EAPI:-0}" 0 1 2 && ! use prefix; then
-		EPREFIX=
-		EROOT=${ROOT}
-		ED=${D}
-	fi
-
 	tc-export CC CXX LD AR RANLIB
 
 	enewgroup "${GAMES_GROUP}" 35
 	[[ ${GAMES_USER} != "root" ]] \
-		&& enewuser "${GAMES_USER}" 35 -1 "${EPREFIX}${GAMES_PREFIX}" "${GAMES_GROUP}"
+		&& enewuser "${GAMES_USER}" 35 -1 "${GAMES_PREFIX}" "${GAMES_GROUP}"
 	[[ ${GAMES_USER_DED} != "root" ]] \
-		&& enewuser "${GAMES_USER_DED}" 36 "${EPREFIX}"/bin/bash "${EPREFIX}${GAMES_PREFIX}" "${GAMES_GROUP}"
+		&& enewuser "${GAMES_USER_DED}" 36 /bin/bash "${GAMES_PREFIX}" "${GAMES_GROUP}"
 
 	# Dear portage team, we are so sorry.  Lots of love, games team.
 	# See Bug #61680
 	[[ ${USERLAND} != "GNU" ]] && return 0
 	[[ $(egetshell "${GAMES_USER_DED}") == "/bin/false" ]] \
-		&& usermod -s "${EPREFIX}"/bin/bash "${GAMES_USER_DED}"
+		&& usermod -s /bin/bash "${GAMES_USER_DED}"
 }
 
 # @FUNCTION: games_src_configure
@@ -322,15 +322,15 @@ games_pkg_preinst() {
 	local f
 
 	while read f ; do
-		if [[ -e ${EROOT}/${GAMES_STATEDIR}/${f} ]] ; then
+		if [[ -e ${ROOT}/${GAMES_STATEDIR}/${f} ]] ; then
 			cp -p \
-				"${EROOT}/${GAMES_STATEDIR}/${f}" \
-				"${ED}/${GAMES_STATEDIR}/${f}" \
+				"${ROOT}/${GAMES_STATEDIR}/${f}" \
+				"${D}/${GAMES_STATEDIR}/${f}" \
 				|| die "cp failed"
 			# make the date match the rest of the install
-			touch "${ED}/${GAMES_STATEDIR}/${f}"
+			touch "${D}/${GAMES_STATEDIR}/${f}"
 		fi
-	done < <(find "${ED}/${GAMES_STATEDIR}" -type f -printf '%P\n' 2>/dev/null)
+	done < <(find "${D}/${GAMES_STATEDIR}" -type f -printf '%P\n' 2>/dev/null)
 }
 
 # @FUNCTION: games_pkg_postinst
@@ -348,7 +348,7 @@ games_pkg_postinst() {
 		esac
 		echo
 		einfo "For more info about Gentoo gaming in general, see our website:"
-		einfo "   http://games.gentoo.org/"
+		einfo "   https://games.gentoo.org/"
 		echo
 	fi
 }

@@ -1,6 +1,6 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/eclass/ssl-cert.eclass,v 1.24 2014/03/20 19:33:13 vapier Exp $
+# $Id$
 
 # @ECLASS: ssl-cert.eclass
 # @MAINTAINER:
@@ -11,7 +11,19 @@
 # This eclass implements a standard installation procedure for installing
 # self-signed SSL certificates.
 # @EXAMPLE:
-# "install_cert /foo/bar" installs ${EROOT}/foo/bar.{key,csr,crt,pem}
+# "install_cert /foo/bar" installs ${ROOT}/foo/bar.{key,csr,crt,pem}
+
+# Guard against unsupported EAPIs.  We need EAPI >= 1 for slot dependencies.
+case "${EAPI:-0}" in
+	0)
+		die "${ECLASS}.eclass: EAPI=0 is not supported.  Please upgrade to EAPI >= 1."
+		;;
+	1|2|3|4|5|6)
+		;;
+	*)
+		die "${ECLASS}.eclass: EAPI=${EAPI} is not supported yet."
+		;;
+esac
 
 # @ECLASS-VARIABLE: SSL_CERT_MANDATORY
 # @DESCRIPTION:
@@ -23,11 +35,18 @@
 # Use flag to append dependency to.
 : ${SSL_CERT_USE:=ssl}
 
-if [[ "${SSL_CERT_MANDATORY}" == "0" ]]; then
-	DEPEND="${SSL_CERT_USE}? ( dev-libs/openssl )"
-	IUSE="${SSL_CERT_USE}"
-else
-	DEPEND="dev-libs/openssl"
+# @ECLASS-VARIABLE: SSL_DEPS_SKIP
+# @DESCRIPTION:
+# Set to non zero to skip adding to DEPEND and IUSE.
+: ${SSL_DEPS_SKIP:=0}
+
+if [[ "${SSL_DEPS_SKIP}" == "0" ]]; then
+	if [[ "${SSL_CERT_MANDATORY}" == "0" ]]; then
+		DEPEND="${SSL_CERT_USE}? ( || ( dev-libs/openssl:0 dev-libs/libressl:0 ) )"
+		IUSE="${SSL_CERT_USE}"
+	else
+		DEPEND="|| ( dev-libs/openssl:0 dev-libs/libressl:0 )"
+	fi
 fi
 
 # @FUNCTION: gen_cnf
@@ -106,8 +125,12 @@ get_base() {
 gen_key() {
 	local base=$(get_base "$1")
 	ebegin "Generating ${SSL_BITS} bit RSA key${1:+ for CA}"
-	openssl genrsa -rand "${SSL_RANDOM}" \
-		-out "${base}.key" "${SSL_BITS}" &> /dev/null
+	if openssl version | grep -i libressl > /dev/null; then
+		openssl genrsa -out "${base}.key" "${SSL_BITS}" &> /dev/null
+	else
+		openssl genrsa -rand "${SSL_RANDOM}" \
+			-out "${base}.key" "${SSL_BITS}" &> /dev/null
+	fi
 	eend $?
 
 	return $?
@@ -182,7 +205,7 @@ gen_pem() {
 # requested certificates.
 # <certificates> are full pathnames relative to ROOT, without extension.
 #
-# Example: "install_cert /foo/bar" installs ${EROOT}/foo/bar.{key,csr,crt,pem}
+# Example: "install_cert /foo/bar" installs ${ROOT}/foo/bar.{key,csr,crt,pem}
 #
 # Access: public
 install_cert() {
@@ -217,8 +240,8 @@ install_cert() {
 
 		# Check for previous existence of generated files
 		for type in key csr crt pem ; do
-			if [ -e "${EROOT}${cert}.${type}" ] ; then
-				ewarn "${EROOT}${cert}.${type}: exists, skipping"
+			if [ -e "${ROOT}${cert}.${type}" ] ; then
+				ewarn "${ROOT}${cert}.${type}: exists, skipping"
 				continue 2
 			fi
 		done
@@ -232,11 +255,11 @@ install_cert() {
 
 		# Install the generated files and set sane permissions
 		local base=$(get_base)
-		install -d "${EROOT}${cert%/*}"
-		install -m0400 "${base}.key" "${EROOT}${cert}.key"
-		install -m0444 "${base}.csr" "${EROOT}${cert}.csr"
-		install -m0444 "${base}.crt" "${EROOT}${cert}.crt"
-		install -m0400 "${base}.pem" "${EROOT}${cert}.pem"
+		install -d "${ROOT}${cert%/*}"
+		install -m0400 "${base}.key" "${ROOT}${cert}.key"
+		install -m0444 "${base}.csr" "${ROOT}${cert}.csr"
+		install -m0444 "${base}.crt" "${ROOT}${cert}.crt"
+		install -m0400 "${base}.pem" "${ROOT}${cert}.pem"
 		: $(( ++count ))
 	done
 

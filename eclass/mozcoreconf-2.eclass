@@ -1,6 +1,6 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/eclass/mozcoreconf-2.eclass,v 1.32 2014/01/17 16:33:15 jer Exp $
+# $Id$
 #
 # mozcoreconf.eclass : core options for mozilla
 # inherit mozconfig-2 if you need USE flags
@@ -241,12 +241,13 @@ mozconfig_init() {
 	fi
 
 	# Currently --enable-elf-dynstr-gc only works for x86,
+	# thanks to Jason Wever <weeve@gentoo.org> for the fix.
 	if use x86 && [[ ${enable_optimize} != -O0 ]]; then
 		mozconfig_annotate "${ARCH} optimized build" --enable-elf-dynstr-gc
 	fi
 
 	# jemalloc won't build with older glibc
-	use elibc_glibc && ! has_version ">=sys-libs/glibc-2.4" && mozconfig_annotate "we have old glibc" --disable-jemalloc
+	! has_version ">=sys-libs/glibc-2.4" && mozconfig_annotate "we have old glibc" --disable-jemalloc
 }
 
 # mozconfig_final: display a table describing all configuration options paired

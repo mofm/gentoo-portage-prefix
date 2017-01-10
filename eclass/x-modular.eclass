@@ -1,6 +1,6 @@
 # Copyright 1999-2012 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/eclass/x-modular.eclass,v 1.126 2013/07/05 17:39:10 ulm Exp $
+# $Id$
 #
 # DEPRECATED
 # This eclass has been superseded by xorg-2
@@ -8,7 +8,6 @@
 #
 # @ECLASS: x-modular.eclass
 # @MAINTAINER:
-# Donnie Berkholz <dberkholz@gentoo.org>
 # x11@gentoo.org
 # @BLURB: Reduces code duplication in the modularized X11 ebuilds.
 # @DESCRIPTION:
@@ -67,10 +66,10 @@ EXPORT_FUNCTIONS ${EXPORTED_FUNCTIONS}
 # recently tested. You may need to uncomment the setting of datadir and
 # mandir in x-modular_src_install() or add it back in if it's no longer
 # there. You may also want to change the SLOT.
-XDIR="${EPREFIX}/usr"
+XDIR="/usr"
 
 IUSE=""
-HOMEPAGE="http://xorg.freedesktop.org/"
+HOMEPAGE="https://www.x.org/wiki/"
 
 # @ECLASS-VARIABLE: SNAPSHOT
 # @DESCRIPTION:
@@ -79,7 +78,7 @@ HOMEPAGE="http://xorg.freedesktop.org/"
 : ${SNAPSHOT:=no}
 
 # Set up SRC_URI for individual modular releases
-BASE_INDIVIDUAL_URI="http://xorg.freedesktop.org/releases/individual"
+BASE_INDIVIDUAL_URI="https://www.x.org/releases/individual"
 # @ECLASS-VARIABLE: MODULE
 # @DESCRIPTION:
 # The subdirectory to download source from. Possible settings are app,
@@ -148,7 +147,7 @@ if [[ -n "${FONT}" ]]; then
 
 	# Set up configure options, wrapped so ebuilds can override if need be
 	if [[ -z ${FONT_OPTIONS} ]]; then
-		FONT_OPTIONS="--with-fontdir=\"${EPREFIX}/usr/share/fonts/${FONT_DIR}\""
+		FONT_OPTIONS="--with-fontdir=\"/usr/share/fonts/${FONT_DIR}\""
 	fi
 
 	if [[ -n "${FONT}" ]]; then
@@ -307,23 +306,12 @@ x-modular_reconf_source() {
 		if [ -f "./configure.ac" ]
 		then
 			eautoreconf
-			return $?
 		fi
 	fi
 
-	case ${CHOST} in
-	*-interix* | *-aix* | *-winnt*)
-		# Need recent libtool for interix, aix, winnt.
-		# For performance reasons do it where really required only.
-		# <haubi@gentoo.org> - July 21, 2008
-		eautoreconf
-		;;
-	*)
-		# Joshua Baergen - October 23, 2005
-		# Fix shared lib issues on MIPS, FBSD, etc etc
-		elibtoolize
-		;;
-	esac
+	# Joshua Baergen - October 23, 2005
+	# Fix shared lib issues on MIPS, FBSD, etc etc
+	elibtoolize
 }
 
 # @FUNCTION: x-modular_src_prepare
@@ -401,8 +389,6 @@ x-modular_src_configure() {
 	x-modular_font_configure
 	x-modular_debug_setup
 
-	[[ ${CHOST} == *-winnt* ]] && append-flags -DWIN32 -D__STDC__
-
 # @VARIABLE: CONFIGURE_OPTIONS
 # @DESCRIPTION:
 # Any extra options to pass to configure
@@ -437,19 +423,19 @@ x-modular_src_compile() {
 # @FUNCTION: x-modular_src_install
 # @USAGE:
 # @DESCRIPTION:
-# Install a built package to ${ED}, performing any necessary steps.
+# Install a built package to ${D}, performing any necessary steps.
 # Creates a ChangeLog from git if using live ebuilds.
 x-modular_src_install() {
 	# Install everything to ${XDIR}
 	if [[ ${CATEGORY} = x11-proto ]]; then
 		make \
-			${PN/proto/}docdir=${EPREFIX}/usr/share/doc/${PF} \
+			${PN/proto/}docdir=/usr/share/doc/${PF} \
 			DESTDIR="${D}" \
 			install \
 			|| die
 	else
 		make \
-			docdir="${EPREFIX}"/usr/share/doc/${PF} \
+			docdir=/usr/share/doc/${PF} \
 			DESTDIR="${D}" \
 			install \
 			|| die
@@ -474,8 +460,8 @@ x-modular_src_install() {
 	[[ -n ${DOCS} ]] && dodoc ${DOCS}
 
 	# Don't install libtool archives for server modules
-	if [[ -e ${ED}/usr/$(get_libdir)/xorg/modules ]]; then
-		find "${ED}"/usr/$(get_libdir)/xorg/modules -name '*.la' \
+	if [[ -e ${D}/usr/$(get_libdir)/xorg/modules ]]; then
+		find "${D}"/usr/$(get_libdir)/xorg/modules -name '*.la' \
 			| xargs rm -f
 	fi
 
@@ -547,7 +533,7 @@ remove_font_metadata() {
 			[[ "${DIR}" != "CID" ]] ; then
 			# Delete font metadata files
 			# fonts.scale, fonts.dir, fonts.cache-1
-			rm -f "${ED}"/usr/share/fonts/${DIR}/fonts.{scale,dir,cache-1}
+			rm -f "${D}"/usr/share/fonts/${DIR}/fonts.{scale,dir,cache-1}
 		fi
 	done
 }
@@ -584,7 +570,7 @@ create_fonts_scale() {
 	ebegin "Creating fonts.scale files"
 		local x
 		for DIR in ${FONT_DIR}; do
-			x=${EROOT}/usr/share/fonts/${DIR}
+			x=${ROOT}/usr/share/fonts/${DIR}
 			[[ -z "$(ls ${x}/)" ]] && continue
 			[[ "$(ls ${x}/)" = "fonts.cache-1" ]] && continue
 
@@ -596,7 +582,7 @@ create_fonts_scale() {
 			if [[ "${x/encodings}" = "${x}" ]] \
 				&& [[ -n "$(find ${x} -iname '*.[pot][ft][abcf]' -print)" ]]; then
 				mkfontscale \
-					-a "${EROOT}"/usr/share/fonts/encodings/encodings.dir \
+					-a "${ROOT}"/usr/share/fonts/encodings/encodings.dir \
 					-- ${x}
 			fi
 		done
@@ -610,14 +596,14 @@ create_fonts_scale() {
 create_fonts_dir() {
 	ebegin "Generating fonts.dir files"
 		for DIR in ${FONT_DIR}; do
-			x=${EROOT}/usr/share/fonts/${DIR}
+			x=${ROOT}/usr/share/fonts/${DIR}
 			[[ -z "$(ls ${x}/)" ]] && continue
 			[[ "$(ls ${x}/)" = "fonts.cache-1" ]] && continue
 
 			if [[ "${x/encodings}" = "${x}" ]]; then
 				mkfontdir \
-					-e "${EROOT}"/usr/share/fonts/encodings \
-					-e "${EROOT}"/usr/share/fonts/encodings/large \
+					-e "${ROOT}"/usr/share/fonts/encodings \
+					-e "${ROOT}"/usr/share/fonts/encodings/large \
 					-- ${x}
 			fi
 		done

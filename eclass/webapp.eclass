@@ -1,6 +1,6 @@
-# Copyright 1999-2011 Gentoo Foundation
+# Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/eclass/webapp.eclass,v 1.72 2012/07/18 14:59:29 blueness Exp $
+# $Id$
 
 # @ECLASS: webapp.eclass
 # @MAINTAINER:
@@ -43,9 +43,9 @@ IS_REPLACE=0
 INSTALL_CHECK_FILE="installed_by_webapp_eclass"
 SETUP_CHECK_FILE="setup_by_webapp_eclass"
 
-ETC_CONFIG="${EROOT}etc/vhosts/webapp-config"
-WEBAPP_CONFIG="${EROOT}usr/sbin/webapp-config"
-WEBAPP_CLEANER="${EROOT}usr/sbin/webapp-cleaner"
+ETC_CONFIG="${ROOT}etc/vhosts/webapp-config"
+WEBAPP_CONFIG="${ROOT}usr/sbin/webapp-config"
+WEBAPP_CLEANER="${ROOT}usr/sbin/webapp-cleaner"
 
 # ==============================================================================
 # INTERNAL FUNCTIONS
@@ -78,7 +78,7 @@ webapp_checkfileexists() {
 	if [[ ! -e "${my_prefix}${1}" ]]; then
 		msg="ebuild fault: file '${1}' not found"
 		eerror "$msg"
-		eerror "Please report this as a bug at http://bugs.gentoo.org/"
+		eerror "Please report this as a bug at https://bugs.gentoo.org/"
 		die "$msg"
 	fi
 }
@@ -95,7 +95,7 @@ webapp_strip_appdir() {
 
 webapp_strip_d() {
 	debug-print-function $FUNCNAME $*
-	echo "${1#${ED}}"
+	echo "${1#${D}}"
 }
 
 webapp_strip_cwd() {
@@ -185,13 +185,13 @@ webapp_configfile() {
 
 	local m
 	for m in "$@"; do
-		webapp_checkfileexists "${m}" "${ED}"
+		webapp_checkfileexists "${m}" "${D}"
 
 		local my_file="$(webapp_strip_appdir "${m}")"
 		my_file="$(webapp_strip_cwd "${my_file}")"
 
 		elog "(config) ${my_file}"
-		echo "${my_file}" >> ${ED}/${WA_CONFIGLIST}
+		echo "${my_file}" >> ${D}/${WA_CONFIGLIST}
 	done
 }
 
@@ -240,11 +240,10 @@ webapp_postupgrade_txt() {
 _webapp_serverowned() {
 	debug-print-function $FUNCNAME $*
 
-	webapp_checkfileexists "${1}" "${ED}"
+	webapp_checkfileexists "${1}" "${D}"
 	local my_file="$(webapp_strip_appdir "${1}")"
 	my_file="$(webapp_strip_cwd "${my_file}")"
 
-	elog "(server owned) ${my_file}"
 	echo "${my_file}" >> "${D}/${WA_SOLIST}"
 }
 
@@ -261,7 +260,7 @@ webapp_serverowned() {
 	if [[ "${1}" == "-R" ]]; then
 		shift
 		for m in "$@"; do
-			find "${ED}${m}" | while read a; do
+			find "${D}${m}" | while read a; do
 				a=$(webapp_strip_d "${a}")
 				_webapp_serverowned "${a}"
 			done
@@ -339,24 +338,24 @@ webapp_src_preinst() {
 		eerror "This ebuild did not call webapp_pkg_setup() at the beginning"
 		eerror "of the pkg_setup() function"
 		eerror
-		eerror "Please log a bug on http://bugs.gentoo.org"
+		eerror "Please log a bug on https://bugs.gentoo.org"
 		eerror
 		eerror "You should use emerge -C to remove this package, as the"
 		eerror "installation is incomplete"
 		eerror
-		die "Ebuild did not call webapp_pkg_setup() - report to http://bugs.gentoo.org"
+		die "Ebuild did not call webapp_pkg_setup() - report to https://bugs.gentoo.org"
 	fi
 
 	# Hint, see the webapp_read_config() function to find where these are
 	# defined.
-	dodir "${MY_HTDOCSDIR#${EPREFIX}}"
-	dodir "${MY_HOSTROOTDIR#${EPREFIX}}"
-	dodir "${MY_CGIBINDIR#${EPREFIX}}"
-	dodir "${MY_ICONSDIR#${EPREFIX}}"
-	dodir "${MY_ERRORSDIR#${EPREFIX}}"
-	dodir "${MY_SQLSCRIPTSDIR#${EPREFIX}}"
-	dodir "${MY_HOOKSCRIPTSDIR#${EPREFIX}}"
-	dodir "${MY_SERVERCONFIGDIR#${EPREFIX}}"
+	dodir "${MY_HTDOCSDIR}"
+	dodir "${MY_HOSTROOTDIR}"
+	dodir "${MY_CGIBINDIR}"
+	dodir "${MY_ICONSDIR}"
+	dodir "${MY_ERRORSDIR}"
+	dodir "${MY_SQLSCRIPTSDIR}"
+	dodir "${MY_HOOKSCRIPTSDIR}"
+	dodir "${MY_SERVERCONFIGDIR}"
 }
 
 # ==============================================================================
@@ -367,7 +366,7 @@ webapp_src_preinst() {
 # @DESCRIPTION:
 # The default pkg_setup() for this eclass. This will gather required variables
 # from webapp-config and check if there is an application installed to
-# `${EROOT}/var/www/localhost/htdocs/${PN}/' if USE=vhosts is not set.
+# `${ROOT}/var/www/localhost/htdocs/${PN}/' if USE=vhosts is not set.
 #
 # You need to call this function BEFORE anything else has run in your custom
 # pkg_setup().
@@ -391,7 +390,7 @@ webapp_pkg_setup() {
 	G_HOSTNAME="localhost"
 	webapp_read_config
 
-	local my_dir="${EROOT}${VHOST_ROOT}/${MY_HTDOCSBASE}/${PN}"
+	local my_dir="${ROOT}${VHOST_ROOT}/${MY_HTDOCSBASE}/${PN}"
 
 	# if USE=vhosts is enabled OR no application is installed we're done here
 	if ! has vhosts ${IUSE} || use vhosts || [[ ! -d "${my_dir}" ]]; then
@@ -446,20 +445,19 @@ webapp_src_install() {
 	# webapp_pkg_postinst() within the same shell process
 	touch "${D}/${MY_APPDIR}/${INSTALL_CHECK_FILE}"
 
-	use prefix || chown -R "${VHOST_DEFAULT_UID}:${VHOST_DEFAULT_GID}" "${ED}/"
-	chmod -R u-s "${ED}/"
-	chmod -R g-s "${ED}/"
+	chown -R "${VHOST_DEFAULT_UID}:${VHOST_DEFAULT_GID}" "${D}/"
+	chmod -R u-s "${D}/"
+	chmod -R g-s "${D}/"
 
-	keepdir "${MY_PERSISTDIR#${EPREFIX}}"
-	#don't chown to root in prefix
-	use prefix || fowners "root:0" "${MY_PERSISTDIR#${EPREFIX}}"
-	fperms 755 "${MY_PERSISTDIR#${EPREFIX}}"
+	keepdir "${MY_PERSISTDIR}"
+	fowners "root:0" "${MY_PERSISTDIR}"
+	fperms 755 "${MY_PERSISTDIR}"
 }
 
 # @FUNCTION: webapp_pkg_postinst
 # @DESCRIPTION:
 # The default pkg_postinst() for this eclass. This installs the web application to
-# `${EROOT}/var/www/localhost/htdocs/${PN}/' if USE=vhosts is not set. Otherwise
+# `${ROOT}/var/www/localhost/htdocs/${PN}/' if USE=vhosts is not set. Otherwise
 # display a short notice how to install this application with webapp-config.
 #
 # You need to call this function AFTER everything else has run in your custom
@@ -475,12 +473,12 @@ webapp_pkg_postinst() {
 		eerror "This ebuild did not call webapp_src_install() at the end"
 		eerror "of the src_install() function"
 		eerror
-		eerror "Please log a bug on http://bugs.gentoo.org"
+		eerror "Please log a bug on https://bugs.gentoo.org"
 		eerror
 		eerror "You should use emerge -C to remove this package, as the"
 		eerror "installation is incomplete"
 		eerror
-		die "Ebuild did not call webapp_src_install() - report to http://bugs.gentoo.org"
+		die "Ebuild did not call webapp_src_install() - report to https://bugs.gentoo.org"
 	fi
 
 	if has vhosts ${IUSE}; then
@@ -504,12 +502,12 @@ webapp_pkg_postinst() {
 				elog "${PN}-${PVR} is not installed - using install mode"
 			fi
 
-			my_cmd="${WEBAPP_CONFIG} ${my_mode} -h localhost -u root -d ${INSTALL_DIR} ${PN} ${PVR}"
+			my_cmd="${WEBAPP_CONFIG} -h localhost -u root -d ${INSTALL_DIR} ${my_mode} ${PN} ${PVR}"
 			elog "Running ${my_cmd}"
 			${my_cmd}
 
 			echo
-			local cleaner="${WEBAPP_CLEANER} -p -C /${PN}"
+			local cleaner="${WEBAPP_CLEANER} -p -C ${CATEGORY}/${PN}"
 			einfo "Running ${cleaner}"
 			${cleaner}
 		else
@@ -520,7 +518,7 @@ webapp_pkg_postinst() {
 			elog
 			elog "To install ${PN}-${PVR} into a virtual host, run the following command:"
 			elog
-			elog "    webapp-config -I -h <host> -d ${PN} ${PN} ${PVR}"
+			elog "    webapp-config -h <host> -d ${PN} -I ${PN} ${PVR}"
 			elog
 			elog "For more details, see the webapp-config(8) man page"
 		fi
@@ -532,7 +530,7 @@ webapp_pkg_postinst() {
 		elog
 		elog "To install ${PN}-${PVR} into a virtual host, run the following command:"
 		elog
-		elog "    webapp-config -I -h <host> -d ${PN} ${PN} ${PVR}"
+		elog "    webapp-config -h <host> -d ${PN} -I ${PN} ${PVR}"
 		elog
 		elog "For more details, see the webapp-config(8) man page"
 	fi
@@ -556,7 +554,7 @@ webapp_pkg_prerm() {
 			if [[ -f "${x}"/.webapp ]]; then
 				. "${x}"/.webapp
 				if [[ -n "${WEB_HOSTNAME}" && -n "${WEB_INSTALLDIR}" ]]; then
-					${WEBAPP_CONFIG} -C -h ${WEB_HOSTNAME} -d ${WEB_INSTALLDIR} ${PN} ${PVR}
+					${WEBAPP_CONFIG} -h ${WEB_HOSTNAME} -d ${WEB_INSTALLDIR} -C ${PN} ${PVR}
 				fi
 			else
 				ewarn "Cannot find file ${x}/.webapp"
