@@ -18,7 +18,7 @@ SRC_URI="https://commondatastorage.googleapis.com/chromium-browser-official/${P}
 LICENSE="BSD"
 SLOT="0"
 KEYWORDS="~amd64 ~arm ~arm64 ~x86"
-IUSE="component-build cups gconf gnome-keyring gtk3 +hangouts kerberos neon pic +proprietary-codecs pulseaudio selinux +suid +system-ffmpeg +tcmalloc widevine"
+IUSE="cups gnome gnome-keyring gtk3 +hangouts kerberos neon pic +proprietary-codecs pulseaudio selinux +suid +system-ffmpeg +tcmalloc widevine"
 RESTRICT="!system-ffmpeg? ( proprietary-codecs? ( bindist ) )"
 
 # Native Client binaries are compiled with different set of flags, bug #452066.
@@ -36,17 +36,14 @@ COMMON_DEPEND="
 	dev-libs/glib:2
 	dev-libs/icu:=
 	>=dev-libs/jsoncpp-0.5.0-r1:=
-	dev-libs/libxml2:=[icu]
-	dev-libs/libxslt:=
 	dev-libs/nspr:=
 	>=dev-libs/nss-3.14.3:=
 	>=dev-libs/re2-0.2016.05.01:=
-	gconf? ( >=gnome-base/gconf-2.24.0:= )
+	gnome? ( >=gnome-base/gconf-2.24.0:= )
 	gnome-keyring? ( >=gnome-base/libgnome-keyring-3.12:= )
 	>=media-libs/alsa-lib-1.0.19:=
 	media-libs/fontconfig:=
 	media-libs/freetype:=
-	>=media-libs/harfbuzz-1.3.1:=[icu(+)]
 	media-libs/libexif:=
 	media-libs/libjpeg-turbo:=
 	media-libs/libpng:=
@@ -75,7 +72,10 @@ COMMON_DEPEND="
 	x11-libs/libXtst:=
 	x11-libs/pango:=
 	app-arch/snappy:=
+	dev-libs/libxml2:=[icu]
+	dev-libs/libxslt:=
 	media-libs/flac:=
+	>=media-libs/harfbuzz-1.3.1:=[icu(+)]
 	>=media-libs/libwebp-0.4.0:=
 	sys-libs/zlib:=[minizip]
 	kerberos? ( virtual/krb5 )
@@ -158,6 +158,7 @@ For other desktop environments, try one of the following:
 PATCHES=(
 	"${FILESDIR}/${PN}-system-ffmpeg-r4.patch"
 	"${FILESDIR}/${PN}-widevine-r1.patch"
+	"${FILESDIR}/${PN}-glibc-2.24.patch"
 )
 
 pre_build_checks() {
@@ -330,10 +331,6 @@ src_configure() {
 	# GN needs explicit config for Debug/Release as opposed to inferring it from build directory.
 	myconf_gn+=" is_debug=false"
 
-	# Component build isn't generally intended for use by end users. It's mostly useful
-	# for development and debugging.
-	myconf_gn+=" is_component_build=$(usex component-build true false)"
-
 	# Disable nacl, we can't build without pnacl (http://crbug.com/269560).
 	myconf_gn+=" enable_nacl=false"
 
@@ -347,7 +344,7 @@ src_configure() {
 	# TODO: use_system_sqlite (http://crbug.com/22208).
 
 	# libevent: https://bugs.gentoo.org/593458
-	local gn_system_libraries=(
+	local gn_system_libraries="
 		flac
 		harfbuzz-ng
 		icu
@@ -360,18 +357,17 @@ src_configure() {
 		re2
 		snappy
 		yasm
-		zlib
-	)
+		zlib"
 	if use system-ffmpeg; then
-		gn_system_libraries+=( ffmpeg )
+		gn_system_libraries+=" ffmpeg"
 	fi
-	build/linux/unbundle/replace_gn_files.py --system-libraries "${gn_system_libraries[@]}" || die
+	build/linux/unbundle/replace_gn_files.py --system-libraries ${gn_system_libraries} || die
 
 	# Optional dependencies.
 	myconf_gn+=" enable_hangout_services_extension=$(usex hangouts true false)"
 	myconf_gn+=" enable_widevine=$(usex widevine true false)"
 	myconf_gn+=" use_cups=$(usex cups true false)"
-	myconf_gn+=" use_gconf=$(usex gconf true false)"
+	myconf_gn+=" use_gconf=$(usex gnome true false)"
 	myconf_gn+=" use_gnome_keyring=$(usex gnome-keyring true false)"
 	myconf_gn+=" use_gtk3=$(usex gtk3 true false)"
 	myconf_gn+=" use_kerberos=$(usex kerberos true false)"
@@ -531,16 +527,16 @@ src_compile() {
 }
 
 src_install() {
-	local CHROMIUM_HOME="/usr/$(get_libdir)/chromium-browser"
+	local CHROMIUM_HOME="/usr/$(get_libdir)/chromium-browser${CHROMIUM_SUFFIX}"
 	exeinto "${CHROMIUM_HOME}"
-	doexe out/Release/chrome
+	doexe out/Release/chrome || die
 
 	if use suid; then
-		newexe out/Release/chrome_sandbox chrome-sandbox
+		newexe out/Release/chrome_sandbox chrome-sandbox || die
 		fperms 4755 "${CHROMIUM_HOME}/chrome-sandbox"
 	fi
 
-	doexe out/Release/chromedriver
+	doexe out/Release/chromedriver || die
 	use widevine && doexe out/Release/libwidevinecdmadapter.so
 
 	# if ! use arm; then
@@ -551,38 +547,42 @@ src_install() {
 	# fi
 
 	local sedargs=( -e "s:/usr/lib/:/usr/$(get_libdir)/:g" )
+	if [[ -n ${CHROMIUM_SUFFIX} ]]; then
+		sedargs+=(
+			-e "s:chromium-browser:chromium-browser${CHROMIUM_SUFFIX}:g"
+			-e "s:chromium.desktop:chromium${CHROMIUM_SUFFIX}.desktop:g"
+			-e "s:plugins:plugins --user-data-dir=\${HOME}/.config/chromium${CHROMIUM_SUFFIX}:"
+		)
+	fi
 	sed "${sedargs[@]}" "${FILESDIR}/chromium-launcher-r3.sh" > chromium-launcher.sh || die
 	doexe chromium-launcher.sh
 
 	# It is important that we name the target "chromium-browser",
 	# xdg-utils expect it; bug #355517.
-	dosym "${CHROMIUM_HOME}/chromium-launcher.sh" /usr/bin/chromium-browser
+	dosym "${CHROMIUM_HOME}/chromium-launcher.sh" /usr/bin/chromium-browser${CHROMIUM_SUFFIX} || die
 	# keep the old symlink around for consistency
-	dosym "${CHROMIUM_HOME}/chromium-launcher.sh" /usr/bin/chromium
+	dosym "${CHROMIUM_HOME}/chromium-launcher.sh" /usr/bin/chromium${CHROMIUM_SUFFIX} || die
 
-	dosym "${CHROMIUM_HOME}/chromedriver" /usr/bin/chromedriver
+	dosym "${CHROMIUM_HOME}/chromedriver" /usr/bin/chromedriver${CHROMIUM_SUFFIX} || die
 
 	# Allow users to override command-line options, bug #357629.
+	dodir /etc/chromium || die
 	insinto /etc/chromium
-	newins "${FILESDIR}/chromium.default" "default"
+	newins "${FILESDIR}/chromium.default" "default" || die
 
 	pushd out/Release/locales > /dev/null || die
 	chromium_remove_language_paks
 	popd
 
 	insinto "${CHROMIUM_HOME}"
-	doins out/Release/*.bin
-	doins out/Release/*.pak
-	doins out/Release/*.so
+	doins out/Release/*.bin || die
+	doins out/Release/*.pak || die
 
-	# Needed by bundled icu
-	# doins out/Release/icudtl.dat
+	doins -r out/Release/locales || die
+	doins -r out/Release/resources || die
 
-	doins -r out/Release/locales
-	doins -r out/Release/resources
-
-	newman out/Release/chrome.1 chromium.1
-	newman out/Release/chrome.1 chromium-browser.1
+	newman out/Release/chrome.1 chromium${CHROMIUM_SUFFIX}.1 || die
+	newman out/Release/chrome.1 chromium-browser${CHROMIUM_SUFFIX}.1 || die
 
 	# Install icons and desktop entry.
 	local branding size
@@ -592,7 +592,7 @@ src_install() {
 				*) branding="chrome/app/theme/chromium" ;;
 		esac
 		newicon -s ${size} "${branding}/product_logo_${size}.png" \
-			chromium-browser.png
+			chromium-browser${CHROMIUM_SUFFIX}.png
 	done
 
 	local mime_types="text/html;text/xml;application/xhtml+xml;"
@@ -600,16 +600,23 @@ src_install() {
 	mime_types+="x-scheme-handler/ftp;" # bug #412185
 	mime_types+="x-scheme-handler/mailto;x-scheme-handler/webcal;" # bug #416393
 	make_desktop_entry \
-		chromium-browser \
-		"Chromium" \
-		chromium-browser \
+		chromium-browser${CHROMIUM_SUFFIX} \
+		"Chromium${CHROMIUM_SUFFIX}" \
+		chromium-browser${CHROMIUM_SUFFIX} \
 		"Network;WebBrowser" \
 		"MimeType=${mime_types}\nStartupWMClass=chromium-browser"
 	sed -e "/^Exec/s/$/ %U/" -i "${ED}"/usr/share/applications/*.desktop || die
 
 	# Install GNOME default application entry (bug #303100).
-	insinto /usr/share/gnome-control-center/default-apps
-	newins "${FILESDIR}"/chromium-browser.xml chromium-browser.xml
+	if use gnome; then
+		dodir /usr/share/gnome-control-center/default-apps || die
+		insinto /usr/share/gnome-control-center/default-apps
+		newins "${FILESDIR}"/chromium-browser.xml chromium-browser${CHROMIUM_SUFFIX}.xml || die
+		if [[ "${CHROMIUM_SUFFIX}" != "" ]]; then
+			sed "s:chromium-browser:chromium-browser${CHROMIUM_SUFFIX}:g" -i \
+				"${ED}"/usr/share/gnome-control-center/default-apps/chromium-browser${CHROMIUM_SUFFIX}.xml
+		fi
+	fi
 
 	readme.gentoo_create_doc
 }
