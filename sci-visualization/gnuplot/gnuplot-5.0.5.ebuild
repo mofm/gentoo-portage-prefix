@@ -67,6 +67,8 @@ GP_VERSION="${PV%.*}"
 E_SITEFILE="lisp/50${PN}-gentoo.el"
 TEXMF="${EPREFIX}/usr/share/texmf-site"
 
+PATCHES=( "${FILESDIR}"/${PN}-5.0.1-fix-underlinking.patch )
+
 src_prepare() {
 	default
 	if [[ -z ${PV%%*9999} ]]; then
