@@ -1,22 +1,22 @@
-# Copyright 1999-2016 Gentoo Foundation
+# Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Id$
 
 EAPI=6
 
-inherit git-r3 eutils cmake-utils
+inherit eutils cmake-utils
 
 DESCRIPTION="i3-compatible Wayland window manager"
 HOMEPAGE="http://swaywm.org/"
 
-EGIT_REPO_URI="https://github.com/SirCmpwn/sway.git"
+SRC_URI="https://github.com/SirCmpwn/sway/archive/${PV}.tar.gz -> ${P}.tar.gz"
 
 LICENSE="MIT"
 SLOT="0"
-KEYWORDS=""
+KEYWORDS="~amd64 ~x86"
 IUSE="+swaybg +swaybar +swaymsg swaygrab swaylock +gdk-pixbuf zsh-completion wallpapers systemd"
 
-RDEPEND="=dev-libs/wlc-9999[systemd=]
+RDEPEND=">=dev-libs/wlc-0.0.5[systemd=]
 	dev-libs/json-c
 	dev-libs/libpcre
 	dev-libs/libinput
@@ -31,6 +31,8 @@ RDEPEND="=dev-libs/wlc-9999[systemd=]
 DEPEND="${RDEPEND}
 	virtual/pkgconfig
 	app-text/asciidoc"
+
+PATCHES=( "${FILESDIR}/sway-0.11-r3-keep-cap.patch" )
 
 src_prepare() {
 	cmake-utils_src_prepare
@@ -54,6 +56,7 @@ src_configure() {
 
 		-DCMAKE_INSTALL_SYSCONFDIR="/etc"
 		-DLD_LIBRARY_PATH="${EPREFIX}/usr/lib"
+		-DGIT_COMMIT_HASH="${PVR}" # specify version info, may change in future
 	)
 
 	cmake-utils_src_configure

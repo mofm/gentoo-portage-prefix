@@ -6,18 +6,20 @@ EAPI=6
 
 PYTHON_COMPAT=( python{2_7,3_4,3_5} )
 PYTHON_REQ_USE='xml(+)'
+COMMIT_ID='dd74383d1cba82829ce720f2e439a65d13ffe7ef'
 
-inherit distutils-r1 git-r3
+inherit distutils-r1 vcs-snapshot
 
 DESCRIPTION="Python library to search and download subtitles"
 HOMEPAGE="https://github.com/Diaoul/subliminal https://pypi.python.org/pypi/subliminal"
-EGIT_REPO_URI=( {https,git}://github.com/Diaoul/${PN}.git )
-EGIT_BRANCH="develop"
-SRC_URI="test? ( mirror://sourceforge/matroska/test_files/matroska_test_w1_1.zip )"
+SRC_URI="
+	https://github.com/Diaoul/${PN}/archive/${COMMIT_ID}.tar.gz -> ${PF}.tar.gz
+	test? ( mirror://sourceforge/matroska/test_files/matroska_test_w1_1.zip )
+"
 
 LICENSE="MIT"
 SLOT="0"
-KEYWORDS=""
+KEYWORDS="~amd64 ~x86"
 IUSE="test"
 
 RDEPEND="
@@ -50,10 +52,9 @@ DEPEND="${RDEPEND}
 	)
 "
 
-src_unpack() {
-	default_src_unpack
-	git-r3_src_unpack
-}
+PATCHES=( "${FILESDIR}/${P}-add-missing-comma.patch" )
+
+S="${WORKDIR}/${PF}"
 
 python_prepare_all() {
 	# Disable code checkers as they require unavailable dependencies.
