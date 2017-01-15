@@ -10,7 +10,7 @@ PYTHON_REQ_USE="xml"
 inherit autotools eutils flag-o-matic gnome2 multilib pax-utils python-r1
 
 DESCRIPTION="A fork of GNOME Shell with layout similar to GNOME 2"
-HOMEPAGE="http://cinnamon.linuxmint.com/"
+HOMEPAGE="http://developer.linuxmint.com/"
 
 MY_PV="${PV/_p/-UP}"
 MY_P="${PN}-${MY_PV}"
@@ -29,7 +29,7 @@ REQUIRED_USE="
 	|| ( $(python_gen_useflags 'python3*') )
 "
 
-KEYWORDS="amd64 x86"
+KEYWORDS="~amd64 ~x86"
 
 COMMON_DEPEND="${PYTHON_DEPS}
 	app-accessibility/at-spi2-atk:2
@@ -93,9 +93,10 @@ RDEPEND="${COMMON_DEPEND}
 	>=app-accessibility/caribou-0.3
 
 	x11-misc/xdg-utils
+	x11-libs/xapps
 
+	dev-python/dbus-python[${PYTHON_USEDEP}]
 	dev-python/pygobject:3[${PYTHON_USEDEP}]
-	$(python_gen_cond_dep 'dev-python/dbus-python[${PYTHON_USEDEP}]' 'python2*')
 	$(python_gen_cond_dep 'dev-python/gconf-python:2[${PYTHON_USEDEP}]' 'python2*')
 	$(python_gen_cond_dep 'dev-python/lxml[${PYTHON_USEDEP}]' 'python2*')
 	$(python_gen_cond_dep 'dev-python/pexpect[${PYTHON_USEDEP}]' 'python2*')
@@ -104,7 +105,7 @@ RDEPEND="${COMMON_DEPEND}
 	$(python_gen_cond_dep 'dev-python/pypam[${PYTHON_USEDEP}]' 'python2*')
 	$(python_gen_cond_dep 'dev-python/pillow[${PYTHON_USEDEP}]' 'python2*')
 
-	x11-themes/gnome-themes-standard[gtk]
+	x11-themes/gnome-themes-standard
 	x11-themes/adwaita-icon-theme
 
 	>=gnome-extra/nemo-2.4
@@ -190,7 +191,6 @@ src_configure() {
 
 	gnome2_src_configure \
 		--libdir="${EPREFIX}/usr/$(get_libdir)" \
-		--disable-rpath \
 		--disable-jhbuild-wrapper-script \
 		$(use_enable networkmanager) \
 		--with-ca-certificates="${EPREFIX}/etc/ssl/certs/ca-certificates.crt" \

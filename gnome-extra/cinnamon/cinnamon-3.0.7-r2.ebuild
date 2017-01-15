@@ -29,7 +29,7 @@ REQUIRED_USE="
 	|| ( $(python_gen_useflags 'python3*') )
 "
 
-KEYWORDS="amd64 x86"
+KEYWORDS="~amd64 ~x86"
 
 COMMON_DEPEND="${PYTHON_DEPS}
 	app-accessibility/at-spi2-atk:2
@@ -104,7 +104,7 @@ RDEPEND="${COMMON_DEPEND}
 	$(python_gen_cond_dep 'dev-python/pypam[${PYTHON_USEDEP}]' 'python2*')
 	$(python_gen_cond_dep 'dev-python/pillow[${PYTHON_USEDEP}]' 'python2*')
 
-	x11-themes/gnome-themes-standard[gtk]
+	x11-themes/gnome-themes-standard
 	x11-themes/adwaita-icon-theme
 
 	>=gnome-extra/nemo-2.4

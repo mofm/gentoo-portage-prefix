@@ -50,6 +50,7 @@ COMMON_DEPEND="${PYTHON_DEPS}
 	>=gnome-base/gsettings-desktop-schemas-2.91.91
 	media-libs/gstreamer:1.0
 	media-libs/gst-plugins-base:1.0
+	media-sound/pulseaudio:0=[glib]
 	net-libs/libsoup:2.4[introspection]
 	>=sys-auth/polkit-0.100[introspection]
 	x11-libs/gdk-pixbuf:2[introspection]
@@ -58,10 +59,10 @@ COMMON_DEPEND="${PYTHON_DEPS}
 	>=x11-libs/startup-notification-0.11
 	x11-libs/libX11
 	>=x11-libs/libXfixes-5.0
-	>=x11-wm/muffin-3.0.0[introspection]
+	>=x11-wm/muffin-2.5[introspection]
 	networkmanager? (
 		gnome-base/libgnome-keyring
-		>=net-misc/networkmanager-0.8.999:=[introspection] )
+		>=net-misc/networkmanager-0.8.999[introspection] )
 "
 #bluetooth? ( >=net-wireless/gnome-bluetooth-3.1:=[introspection] )
 
@@ -153,6 +154,10 @@ src_prepare() {
 	# Use wheel group instead of sudo (from Fedora/Arch)
 	# https://github.com/linuxmint/Cinnamon/issues/3576
 	eapply "${FILESDIR}"/${PN}-2.8.3-set-wheel.patch
+
+	# Fix GNOME 3.14 support (from Fedora/Arch)
+	# https://github.com/linuxmint/Cinnamon/issues/3577
+	eapply "${FILESDIR}"/${PN}-2.8.3-gnome-3.14.patch
 
 	# Use pkexec instead of gksu (from Arch)
 	# https://github.com/linuxmint/Cinnamon/issues/3565
