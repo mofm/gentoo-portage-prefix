@@ -6,18 +6,17 @@ EAPI=6
 
 WX_GTK_VER=3.0
 PLOCALES="ar bg ca cs da de el es eu fa fi fr_FR gl hu id it ja ko nl pl pt_BR pt_PT ru sr_RS sr_RS@latin uk_UA vi zh_CN zh_TW"
+COMMIT_ID="b118fe7e7a5c37540e2f0aa75af105e272bad234"
 
-inherit autotools flag-o-matic gnome2-utils l10n wxwidgets xdg-utils git-r3
+inherit autotools flag-o-matic gnome2-utils l10n wxwidgets xdg-utils vcs-snapshot
 
 DESCRIPTION="Advanced subtitle editor"
 HOMEPAGE="http://www.aegisub.org/ https://github.com/Aegisub/Aegisub"
-EGIT_REPO_URI=( {https,git}://github.com/${PN^}/${PN^}.git )
-# Submodules are used to pull bundled libraries.
-EGIT_SUBMODULES=()
+SRC_URI="https://github.com/Aegisub/Aegisub/archive/${COMMIT_ID}.tar.gz -> ${P}.tar.gz"
 
 LICENSE="BSD MIT"
 SLOT="0"
-KEYWORDS=""
+KEYWORDS="amd64 x86"
 IUSE="alsa debug +fftw openal oss portaudio pulseaudio spell test +uchardet"
 
 # aegisub bundles luabins (https://github.com/agladysh/luabins).
@@ -57,9 +56,9 @@ DEPEND="${RDEPEND}
 REQUIRED_USE="|| ( alsa openal oss portaudio pulseaudio )"
 
 PATCHES=(
-	"${FILESDIR}/3.2.2_p20160518/${PN}-3.2.2_p20160518-fix-system-luajit-build.patch"
-	"${FILESDIR}/3.2.2_p20160518/${PN}-3.2.2_p20160518-respect-compiler-flags.patch"
-	"${FILESDIR}/3.2.2_p20160518/${PN}-3.2.2_p20160518-support-system-gtest.patch"
+	"${FILESDIR}/${PV}/${P}-fix-system-luajit-build.patch"
+	"${FILESDIR}/${PV}/${P}-respect-compiler-flags.patch"
+	"${FILESDIR}/${PV}/${P}-support-system-gtest.patch"
 )
 
 aegisub_check_compiler() {
@@ -93,6 +92,12 @@ src_prepare() {
 	config_rpath_update "${S}"/config.rpath
 
 	eautoreconf
+
+	cat <<- EOF > build/git_version.h || die
+		#define BUILD_GIT_VERSION_NUMBER 8897
+		#define BUILD_GIT_VERSION_STRING "${PV}"
+		#define TAGGED_RELEASE 0
+	EOF
 }
 
 src_configure() {
