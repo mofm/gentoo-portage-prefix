@@ -1,10 +1,10 @@
-# Copyright 1999-2016 Gentoo Foundation
+# Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Id$
 
 EAPI=5
 
-inherit autotools sgml-catalog eutils flag-o-matic multilib
+inherit autotools sgml-catalog eutils flag-o-matic multilib toolchain-funcs
 
 DESCRIPTION="Jade is an implementation of DSSSL for formatting SGML and XML documents"
 HOMEPAGE="http://openjade.sourceforge.net"
@@ -28,8 +28,6 @@ src_prepare() {
 	epatch "${FILESDIR}"/${P}-libosp-la.patch
 	epatch "${FILESDIR}"/${P}-gcc46.patch
 	epatch "${FILESDIR}"/${P}-darwin.patch
-	epatch "${FILESDIR}"/${P}-no-undefined.patch
-	epatch "${FILESDIR}"/${P}-wchar_t-uint.patch
 
 	# Please note!  Opts are disabled.  If you know what you're doing
 	# feel free to remove this line.  It may cause problems with
@@ -54,8 +52,8 @@ src_prepare() {
 src_configure() {
 	# avoids dead-store elimination optimization
 	# leading to segfaults on GCC 6
-	# bug #592590
-	append-cxxflags -fno-lifetime-dse
+	# bug #592590 #596506
+	tc-is-clang || append-cxxflags $(test-flags-CXX -fno-lifetime-dse)
 
 	# We need Prefix env, bug #287358
 	export CONFIG_SHELL="${CONFIG_SHELL:-${BASH}}"
