@@ -5,8 +5,8 @@
 EAPI=6
 
 KDE_AUTODEPS="false"
-KDE_TEST="true"
-inherit kde5
+KDE_TEST="forceoptional-recursive"
+inherit kde5 xdg-utils
 
 if [[ ${KDE_BUILD_TYPE} = live ]]; then
 	EGIT_REPO_URI="https://github.com/ximion/${PN}"
@@ -35,11 +35,17 @@ RDEPEND="
 	qt5? ( dev-qt/qtcore:5 )
 "
 DEPEND="${RDEPEND}
+	app-text/docbook-xml-dtd:4.5
 	dev-util/itstool
 	sys-devel/gettext
+	test? (
+		qt5? ( dev-qt/qttest:5 )
+	)
 "
 
 src_configure() {
+	xdg_environment_reset
+
 	local mycmakeargs=(
 		-DSTEMMING=ON
 		-DL18N=ON
