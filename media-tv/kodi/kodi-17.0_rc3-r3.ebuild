@@ -159,6 +159,8 @@ In some cases Kodi needs to access multicast addresses.
 Please consider enabling IP_MULTICAST under Networking options.
 "
 
+CMAKE_USE_DIR=${S}/project/cmake/
+
 pkg_setup() {
 	check_extra_config
 	python-single-r1_pkg_setup
@@ -192,7 +194,7 @@ src_prepare() {
 
 	# Prevent autoreconf rerun
 	sed -e 's/autoreconf -vif/echo "autoreconf already done in src_prepare()"/' -i \
-		"${S}"/cmake/modules/FindCpluff.cmake \
+		"${S}"/project/cmake/modules/FindCpluff.cmake \
 		"${S}"/tools/depends/native/TexturePacker/src/autogen.sh \
 		"${S}"/tools/depends/native/JsonSchemaBuilder/src/autogen.sh
 }
@@ -253,6 +255,12 @@ src_install() {
 	rm "${ED%/}"/usr/share/doc/*/{LICENSE.GPL,copying.txt}* || die
 
 	newicon media/icon48x48.png kodi.png
+
+	# Remove fontconfig settings that are used only on MacOSX.
+	# Can't be patched upstream because they just find all files and install
+	# them into same structure like they have in git.
+	# Will be fixed upstream so this deletion will be unnecesssary, see https://github.com/xbmc/xbmc/pull/11451
+	rm -rf "${ED%/}"/usr/share/kodi/system/players/VideoPlayer/etc || die
 
 	# Replace bundled fonts with system ones.
 	rm "${ED%/}"/usr/share/kodi/addons/skin.estouchy/fonts/NotoSans-Regular.ttf || die
