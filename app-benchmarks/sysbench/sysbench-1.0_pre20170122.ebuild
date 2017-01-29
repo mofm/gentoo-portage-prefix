@@ -4,16 +4,18 @@
 
 EAPI="6"
 
-inherit git-r3
+inherit vcs-snapshot
+
+GITHUB_REV="21a28231adb0645e67447b5c2169ad0cc63c829e"
 
 DESCRIPTION="System performance benchmark"
 HOMEPAGE="https://github.com/akopytov/sysbench"
 
-EGIT_REPO_URI="https://github.com/akopytov/sysbench.git"
+SRC_URI="https://github.com/akopytov/sysbench/archive/${GITHUB_REV}.tar.gz -> ${P}.tar.gz"
 
 LICENSE="GPL-2+"
 SLOT="0"
-KEYWORDS=""
+KEYWORDS="~amd64 ~x86"
 IUSE="aio mysql postgres test"
 
 RDEPEND="aio? ( dev-libs/libaio )
