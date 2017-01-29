@@ -1902,6 +1902,11 @@ EOF
 	[[ ${TODO} == 'noninteractive' ]] &&
 	usergcc=$(type -P gcc 2>/dev/null)
 
+	# the standard path we want to start with, override anything from
+	# the user on purpose
+	PATH="/usr/bin:/bin"
+	# don't exclude the path to bash if it isn't in a standard location
+	type -P bash > /dev/null || PATH="${BASH%/bash}:${PATH}"
 	case "${CHOST}" in
 		*-solaris*)
 			cat << EOF
@@ -2197,7 +2202,7 @@ EOF
 
 	# Figure out if we are bootstrapping from an existing Gentoo
 	# It can be forced by setting HOST_GENTOO_EROOT manually
-	local t_GENTOO_EROOT=$(portageq envvar EROOT 2> /dev/null)
+	local t_GENTOO_EROOT=$(/usr/bin/portageq envvar EROOT 2> /dev/null)
 	if [[ ! -d ${HOST_GENTOO_EROOT} ]] && [[ -d ${t_GENTOO_EROOT} ]]; then
 		cat <<EOF
 
