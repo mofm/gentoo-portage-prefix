@@ -303,12 +303,6 @@ ppc-aix			prefix/aix/5.3.0.0/ppc				dev
 ppc-aix			prefix/aix/6.1.0.0/ppc				dev
 ppc-aix			prefix/aix/7.1.0.0/ppc				dev
 
-# Interix Profiles
-x86-interix		prefix/windows/interix/3.5/x86			dev
-x86-interix		prefix/windows/interix/5.2/x86			dev
-x86-interix		prefix/windows/interix/6.0/x86			dev
-x86-interix		prefix/windows/interix/6.1/x86			dev
-
 # Windows Profiles
 x86-winnt		prefix/windows/winnt/3.5/x86			dev
 x86-winnt		prefix/windows/winnt/5.2/x86			dev
@@ -318,32 +312,6 @@ x86-winnt		prefix/windows/winnt/6.1/x86			dev
 # Cygwin Profiles
 x86-cygwin		prefix/windows/cygwin/x86			dev
 x64-cygwin		prefix/windows/cygwin/x64			dev
-
-# FreeBSD Profiles
-x86-freebsd		prefix/bsd/freebsd/7.1/x86			dev
-x64-freebsd		prefix/bsd/freebsd/7.1/x64			dev
-x86-freebsd		prefix/bsd/freebsd/7.2/x86			dev
-x64-freebsd		prefix/bsd/freebsd/7.2/x64			dev
-x86-freebsd		prefix/bsd/freebsd/8.0/x86			dev
-x64-freebsd		prefix/bsd/freebsd/8.0/x64			dev
-x86-freebsd		prefix/bsd/freebsd/8.1/x86			dev
-x64-freebsd		prefix/bsd/freebsd/8.1/x64			dev
-sparc64-freebsd		prefix/bsd/freebsd/8.1/sparc64			dev
-x86-freebsd		prefix/bsd/freebsd/8.2/x86			dev
-x64-freebsd		prefix/bsd/freebsd/8.2/x64			dev
-x86-freebsd		prefix/bsd/freebsd/9.0/x86			dev
-x64-freebsd		prefix/bsd/freebsd/9.0/x64			dev
-x86-freebsd		prefix/bsd/freebsd/9.1/x86			dev
-x64-freebsd		prefix/bsd/freebsd/9.1/x64			dev
-
-
-# OpenBSD Profiles
-ppc-openbsd		prefix/bsd/openbsd/4.2/ppc			dev
-x86-openbsd		prefix/bsd/openbsd/4.2/x86			dev
-x64-openbsd		prefix/bsd/openbsd/4.2/x64			dev
-
-# NetBSD Profiles
-x86-netbsd		prefix/bsd/netbsd/4.0/x86			dev
 
 # FreeMiNT
 m68k-mint		prefix/mint/m68k				dev
