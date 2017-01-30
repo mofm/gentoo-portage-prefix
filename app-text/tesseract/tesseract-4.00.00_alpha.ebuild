@@ -21,7 +21,6 @@ SRC_URI="https://github.com/${MY_PN}/${PN}/archive/${PV/_}.tar.gz -> ${P}.tar.gz
 LICENSE="Apache-2.0"
 SLOT="0"
 KEYWORDS="~alpha ~amd64 ~arm ~mips ~ppc ~ppc64 ~sparc ~x86"
-# Next release will include SSE4.1/AVX
 IUSE="doc examples jpeg math opencl openmp osd png scrollview static-libs tiff training webp"
 
 # List of supported Gentoo linguas and their upstream mapping
