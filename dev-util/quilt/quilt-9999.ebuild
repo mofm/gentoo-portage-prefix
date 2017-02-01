@@ -2,51 +2,40 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Id$
 
-EAPI="5"
+EAPI=5
+
+EGIT_REPO_URI="git://git.sv.gnu.org/quilt.git"
+
+[[ ${PV} == 9999 ]] && inherit git-2
 
 inherit bash-completion-r1 eutils
 
 DESCRIPTION="quilt patch manager"
 HOMEPAGE="https://savannah.nongnu.org/projects/quilt"
-SRC_URI="https://savannah.nongnu.org/download/quilt/${P}.tar.gz"
+[[ ${PV} == 9999 ]] || SRC_URI="https://savannah.nongnu.org/download/quilt/${P}.tar.gz"
 
 LICENSE="GPL-2"
 SLOT="0"
+[[ ${PV} == 9999 ]] || \
 KEYWORDS="~amd64 ~arm ~mips ~ppc ~ppc64 ~sparc ~x86 ~amd64-linux ~x86-linux ~ppc-macos ~x86-macos ~x64-solaris"
-IUSE="emacs graphviz elibc_Darwin elibc_SunOS"
+IUSE="graphviz elibc_Darwin elibc_SunOS"
 
-RDEPEND="sys-apps/ed
+RDEPEND="
 	dev-util/diffstat
-	graphviz? ( media-gfx/graphviz )
+	mail-mta/sendmail
+	sys-apps/ed
 	elibc_Darwin? ( app-misc/getopt )
 	elibc_SunOS? ( app-misc/getopt )
-	>=sys-apps/coreutils-8.5"
-
-PDEPEND="emacs? ( app-emacs/quilt-el )"
-
-pkg_setup() {
-	use graphviz && return 0
-	echo
-	elog "If you intend to use the folding functionality (graphical illustration of the"
-	elog "patch stack) then you'll need to remerge this package with USE=graphviz."
-	echo
-}
-
-src_unpack() {
-	unpack ${A}
-
-	# Some tests are somewhat broken while being run from within portage, work
-	# fine if you run them manually
-	rm "${S}"/test/delete.test "${S}"/test/mail.test
-}
+	>=sys-apps/coreutils-8.5
+	graphviz? ( media-gfx/graphviz )
+"
 
 src_prepare() {
-
-	# Apply bash-competion patch see bug #526294
-	epatch "${FILESDIR}/${P}-bash-completion.patch"
-
 	# Add support for USE=graphviz
-	use graphviz || epatch "${FILESDIR}/${P}-no-graphviz.patch"
+	use graphviz || epatch "${FILESDIR}/${PN}-0.60-no-graphviz.patch"
+
+	# remove failing test, because it fails on root-build
+	rm -rf test/delete.test
 }
 
 src_configure() {
@@ -57,10 +46,11 @@ src_configure() {
 }
 
 src_install() {
-	emake BUILD_ROOT="${D}" install || die "make install failed"
+	emake BUILD_ROOT="${ED}" install
 
 	rm -rf "${ED}"/usr/share/doc/${P}
-	dodoc AUTHORS TODO doc/README doc/README.MAIL doc/quilt.pdf
+	dodoc AUTHORS TODO quilt.changes doc/README doc/README.MAIL \
+		doc/quilt.pdf
 
 	rm -rf "${ED}"/etc/bash_completion.d
 	newbashcomp bash_completion ${PN}
@@ -70,4 +60,10 @@ src_install() {
 
 	# Remove Emacs mode; newer version is in app-emacs/quilt-el, bug 247500
 	rm -rf "${ED}"/usr/share/emacs
+}
+
+pkg_postinst() {
+	if ! has_version app-emacs/quilt-el ; then
+		elog "If you plan to use quilt with emacs consider installing \"app-emacs/quilt-el\""
+	fi
 }
