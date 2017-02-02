@@ -1,29 +1,24 @@
-# Copyright 1999-2009 Gentoo Foundation
+# Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/dev-util/duma/duma-2.5.13.ebuild,v 1.7 2009/09/23 17:44:31 patrick Exp $
+# $Id$
 
-inherit eutils flag-o-matic multilib toolchain-funcs versionator prefix
+inherit eutils flag-o-matic multilib toolchain-funcs versionator
 
 MY_P="${PN}_$(replace_all_version_separators '_')"
 
-DESCRIPTION="DUMA (Detect Unintended Memory Access) is a memory debugging library."
+DESCRIPTION="DUMA (Detect Unintended Memory Access) is a memory debugging library"
 HOMEPAGE="http://duma.sourceforge.net/"
 
 SRC_URI="mirror://sourceforge/duma/${MY_P}.tar.gz"
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="~amd64-linux ~x86-linux ~x86-macos"
+KEYWORDS="amd64 ppc x86"
 IUSE="examples"
 
 DEPEND=""
 RDEPEND="${DEPEND}
 	app-shells/bash"
-
-case ${CHOST} in
-	*-darwin*) OS=osx;;
-	*) OS=;;
-esac
 
 S="${WORKDIR}/${MY_P}"
 
@@ -45,13 +40,8 @@ pkg_setup() {
 src_unpack(){
 	unpack ${A}
 	cd "${S}"
-	epatch "${FILESDIR}"/${PN}-2.5.8-includes.patch
-	epatch "${FILESDIR}"/${P}-prefix.patch
-	epatch "${FILESDIR}"/${P}-soname.patch
 	sed -i -e "s:(prefix)/lib:(prefix)/$(get_libdir):g" Makefile
 	sed -i -e "s:share/doc/duma:share/doc/${P}:g" Makefile
-	sed -i -e "s:lib\(/libduma.dylib\):$(get_libdir)\1:" duma.sh
-	eprefixify duma.sh
 }
 
 src_compile(){
@@ -61,8 +51,8 @@ src_compile(){
 
 	use amd64 && export DUMA_ALIGNMENT=16
 
-	make CPPFLAGS="${DUMA_OPTIONS}" OS=${OS} reconfig || die "make reconfig failed"
-	emake CFLAGS="${CFLAGS}" CC=$(tc-getCC) OS=${OS} || die "make failed"
+	make CPPFLAGS="${DUMA_OPTIONS}" reconfig || die "make reconfig failed"
+	emake CFLAGS="${CFLAGS}" CC=$(tc-getCC) || die "make failed"
 }
 
 src_test() {
@@ -71,8 +61,8 @@ src_test() {
 
 	cd "${S}"
 	use amd64 && export DUMA_ALIGNMENT=16
-	make CFLAGS="${DUMA_OPTIONS} ${CFLAGS}" CC=$(tc-getCC) CXX=$(tc-getCXX) \
-	    CPPFLAGS="${CXXFLAGS}" OS=${OS} test || die "make test failed"
+	make CFLAGS="${DUMA_OPTIONS} ${CFLAGS}" \
+	    CC=$(tc-getCC) test || die "make test failed"
 
 	elog ""
 	ewarn "Check output above to verify all tests have passed.  Both"
@@ -82,8 +72,7 @@ src_test() {
 
 src_install(){
 	# make install fails nicely here on the first file...
-	make prefix="${EPREFIX}"/usr DESTDIR="${D}" OS=${OS} install \
-		|| die "make install failed"
+	make DESTDIR="${D}" install || die "make install failed"
 	dodoc CHANGELOG TODO
 	# All the good comments on duma build options are in the Makefile
 	newdoc Makefile Makefile.duma
