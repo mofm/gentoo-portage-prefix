@@ -7,20 +7,18 @@ EAPI="5"
 PYTHON_COMPAT=( python{2_7,3_4,3_5} pypy )
 PYTHON_REQ_USE="xml(+),sqlite?"
 
-inherit eutils distutils-r1 git-2 linux-info prefix
+inherit eutils distutils-r1 linux-info prefix
 
 DESCRIPTION="Tool to manage Gentoo overlays"
-HOMEPAGE="http://layman.sourceforge.net"
-SRC_URI=""
-EGIT_REPO_URI="git://anongit.gentoo.org/proj/layman.git"
+HOMEPAGE="https://wiki.gentoo.org/wiki/Layman"
+SRC_URI="mirror://sourceforge/${PN}/${P}.tar.gz"
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS=""
+KEYWORDS="~amd64 ~arm ~arm64 ~hppa ~mips ~ppc ~ppc64 ~s390 ~x86"
 IUSE="bazaar cvs darcs +git gpg g-sorcery mercurial sqlite squashfs subversion sync-plugin-portage test"
 
 DEPEND="test? ( dev-vcs/subversion )
-	app-text/asciidoc
 	"
 
 RDEPEND="
@@ -42,6 +40,7 @@ RDEPEND="
 	!sync-plugin-portage? ( sys-apps/portage[${PYTHON_USEDEP}] )
 	>=dev-python/ssl-fetch-0.4[${PYTHON_USEDEP}]
 	"
+
 
 layman_check_kernel_config() {
 	local CONFIG_CHECK
@@ -68,11 +67,6 @@ python_test() {
 	suite=layman/tests/external.py
 	PYTHONPATH="." "${PYTHON}" ${suite} || die "test suite '${suite}' failed"
 	unset suite
-}
-
-python_compile_all() {
-	# override MAKEOPTS to prevent build failure
-	emake -j1 -C doc
 }
 
 python_install_all() {
