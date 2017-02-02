@@ -2,17 +2,16 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Id$
 
-EAPI=5
+EAPI=6
 
 PYTHON_COMPAT=( python2_7 python3_{4,5} )
-
 PYTHON_REQ_USE='tk?,threads(+)'
 
-inherit distutils-r1 eutils flag-o-matic virtualx toolchain-funcs
+inherit distutils-r1 eutils flag-o-matic multiprocessing virtualx toolchain-funcs
 
 DESCRIPTION="Pure python plotting library with matlab like syntax"
 HOMEPAGE="http://matplotlib.org/"
-SRC_URI="mirror://sourceforge/${PN}/${P}.tar.gz"
+SRC_URI="mirror://pypi/${PN:0:1}/${PN}/${P}.tar.gz"
 
 SLOT="0"
 # Main license: matplotlib
@@ -20,24 +19,25 @@ SLOT="0"
 # matplotlib/backends/qt4_editor: MIT
 # Fonts: BitstreamVera, OFL-1.1
 LICENSE="BitstreamVera BSD matplotlib MIT OFL-1.1"
-KEYWORDS="amd64 arm ppc64 x86 ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos"
-IUSE="cairo doc excel examples fltk gtk gtk3 latex pyside qt4 qt5 test tk wxwidgets"
+KEYWORDS="~amd64 ~arm ~ppc64 ~x86 ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos"
+IUSE="cairo doc excel examples fltk gtk2 gtk3 latex pyside qt4 qt5 test tk wxwidgets"
 
 PY2_FLAGS="|| ( $(python_gen_useflags python2_7) )"
 REQUIRED_USE="
 	doc? ( ${PY2_FLAGS} )
 	excel? ( ${PY2_FLAGS} )
 	fltk? ( ${PY2_FLAGS} )
-	gtk? ( ${PY2_FLAGS} )
+	gtk2? ( ${PY2_FLAGS} )
 	wxwidgets? ( ${PY2_FLAGS} )
 	test? (
 		cairo fltk latex pyside qt5 qt4 tk wxwidgets
-		|| ( gtk gtk3 )
+		|| ( gtk2 gtk3 )
 		)"
 
 # #456704 -- a lot of py2-only deps
 PY2_USEDEP=$(python_gen_usedep python2_7)
 COMMON_DEPEND="
+	dev-python/cycler[${PYTHON_USEDEP}]
 	>=dev-python/numpy-1.6[${PYTHON_USEDEP}]
 	dev-python/python-dateutil:0[${PYTHON_USEDEP}]
 	dev-python/pytz[${PYTHON_USEDEP}]
@@ -46,7 +46,8 @@ COMMON_DEPEND="
 	media-libs/freetype:2
 	media-libs/libpng:0
 	media-libs/qhull
-	gtk? (
+	cairo? ( dev-python/cairocffi[${PYTHON_USEDEP}] )
+	gtk2? (
 		dev-libs/glib:2=
 		x11-libs/gdk-pixbuf
 		x11-libs/gtk+:2
@@ -57,15 +58,17 @@ COMMON_DEPEND="
 #	dev-python/pycxx
 
 DEPEND="${COMMON_DEPEND}
+	dev-python/versioneer[${PYTHON_USEDEP}]
+	dev-python/setuptools[${PYTHON_USEDEP}]
 	virtual/pkgconfig
 	doc? (
 		app-text/dvipng
 		dev-python/pillow[${PYTHON_USEDEP}]
 		dev-python/ipython[${PYTHON_USEDEP}]
+		dev-python/mock[${PY2_USEDEP}]
 		dev-python/numpydoc[${PYTHON_USEDEP}]
-		dev-python/xlwt[${PYTHON_USEDEP}]
 		dev-python/sphinx[${PYTHON_USEDEP}]
-		!~dev-python/sphinx-1.3.4
+		dev-python/xlwt[${PYTHON_USEDEP}]
 		dev-texlive/texlive-latexextra
 		dev-texlive/texlive-fontsrecommended
 		dev-texlive/texlive-latexrecommended
@@ -78,12 +81,6 @@ DEPEND="${COMMON_DEPEND}
 
 RDEPEND="${COMMON_DEPEND}
 	>=dev-python/pyparsing-1.5.6[${PYTHON_USEDEP}]
-	cairo? (
-		|| (
-			dev-python/pycairo[${PYTHON_USEDEP}]
-			dev-python/cairocffi[${PYTHON_USEDEP}]
-			)
-		)
 	excel? ( dev-python/xlwt[${PYTHON_USEDEP}] )
 	fltk? ( dev-python/pyfltk[${PYTHON_USEDEP}] )
 	gtk3? (
@@ -107,8 +104,11 @@ RDEPEND="${COMMON_DEPEND}
 # Other than that, the ebuild shall be fit for out-of-source build.
 DISTUTILS_IN_SOURCE_BUILD=1
 
+PATCHES=( "${FILESDIR}/${PN}-1.5.3-freetype-spurious-failure.patch" )
+
 pkg_setup() {
 	unset DISPLAY # bug #278524
+	use doc && DISTUTILS_ALL_SUBPHASE_IMPLS=( python2.7 )
 }
 
 use_setup() {
@@ -122,10 +122,6 @@ use_setup() {
 	fi
 }
 
-PATCHES=(
-	"${FILESDIR}"/${P}-backport-GH5291-2462.patch
-)
-
 python_prepare_all() {
 # Generates test failures, but fedora does it
 #	local PATCHES=(
@@ -135,7 +131,10 @@ python_prepare_all() {
 #	rm -r agg24 CXX || die
 #	rm -r agg24 || die
 
-	epatch "${FILESDIR}"/${PN}-1.4.3-cross-compile-{1,2,3}.patch
+#	cat > lib/${PN}/externals/six.py <<-EOF
+#	from __future__ import absolute_import
+#	from six import *
+#	EOF
 
 	sed \
 		-e 's/matplotlib.pyparsing_py[23]/pyparsing/g' \
@@ -143,9 +142,9 @@ python_prepare_all() {
 		|| die "sed pyparsing failed"
 
 	# suggested by upstream
-	sed \
-		-e '/tol/s:32:35:g' \
-		-i lib/matplotlib/tests/test_mathtext.py || die
+#	sed \
+#		-e '/tol/s:32:35:g' \
+#		-i lib/matplotlib/tests/test_mathtext.py || die
 
 	sed \
 		-e "s:/usr/:${EPREFIX}/usr/:g" \
@@ -170,7 +169,7 @@ python_configure() {
 	# create setup.cfg (see setup.cfg.template for any changes).
 
 	# common switches.
-	cat > "${BUILD_DIR}"/setup.cfg <<- EOF
+	cat > "${BUILD_DIR}"/setup.cfg <<- EOF || die
 		[directories]
 		basedirlist = "${EPREFIX}/usr"
 		[provide_packages]
@@ -192,7 +191,7 @@ python_configure() {
 	fi
 
 	if $(python_is_python3); then
-		cat >> "${BUILD_DIR}"/setup.cfg <<- EOF
+		cat >> "${BUILD_DIR}"/setup.cfg <<- EOF || die
 			six = True
 			fltk = False
 			fltkagg = False
@@ -202,10 +201,10 @@ python_configure() {
 			wxagg = False
 		EOF
 	else
-		cat >> "${BUILD_DIR}"/setup.cfg <<-EOF
+		cat >> "${BUILD_DIR}"/setup.cfg <<-EOF || die
 			six = False
 			$(use_setup fltk)
-			$(use_setup gtk)
+			$(use_setup gtk2 gtk)
 			$(use_setup gtk3)
 			$(use_setup wxwidgets wx)
 		EOF
@@ -233,17 +232,20 @@ python_compile_all() {
 		local -x PYTHONPATH="${BUILD_DIR}"/build/lib:${PYTHONPATH}
 
 		VARTEXFONTS="${T}"/fonts \
-		"${PYTHON}" ./make.py --small html || die
+		"${EPYTHON}" ./make.py --small html || die
 	fi
 }
 
 python_test() {
 	wrap_setup distutils_install_for_testing
 
-	cd "${TMPDIR}" || die
-	VIRTUALX_COMMAND="${PYTHON}"
-	virtualmake -c "import sys, matplotlib as m; sys.exit(0 if m.test(verbosity=2) else 1)" || \
-		die "Tests fail with ${EPYTHON}"
+#	virtx ${EPYTHON} tests.py \
+#		--no-pep8 \
+#		--no-network \
+#		--verbose \
+#		--processes=$(makeopts_jobs)
+
+	virtx "${EPYTHON}" -c "import sys, matplotlib as m; sys.exit(0 if m.test(verbosity=2) else 1)"
 }
 
 python_install() {
