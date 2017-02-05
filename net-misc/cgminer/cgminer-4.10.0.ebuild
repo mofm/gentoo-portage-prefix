@@ -15,7 +15,7 @@ LICENSE="GPL-3"
 SLOT="0"
 KEYWORDS="~amd64 ~arm ~x86"
 
-HARDWARE="ants1 ants2 ants3 avalon avalon2 avalon4 bab bflsc bitforce bitfury bitmine_A1 blockerupter cointerra drillbit hashfast hashratio icarus klondike knc minion modminer sp10 sp30"
+HARDWARE="ants1 ants2 ants3 avalon avalon2 avalon4 avalon7 avalon-miner bab bflsc bitforce bitfury bitmine_A1 blockerupter cointerra drillbit hashfast hashratio icarus klondike knc minion modminer sp10 sp30"
 IUSE="doc examples udev hardened ncurses ${HARDWARE}"
 
 REQUIRED_USE="|| ( ${HARDWARE} )"
@@ -40,6 +40,8 @@ src_configure() {
 		$(use_enable avalon) \
 		$(use_enable avalon2) \
 		$(use_enable avalon4) \
+		$(use_enable avalon7) \
+		$(use_enable avalon-miner) \
 		$(use_enable bab) \
 		$(use_enable bitmine_A1) \
 		$(use_enable bflsc) \
