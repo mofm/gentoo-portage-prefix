@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Id$
 
-EAPI=5
+EAPI=6
 
 inherit elisp toolchain-funcs
 
@@ -12,16 +12,12 @@ SRC_URI="https://dev.gentoo.org/~ulm/distfiles/${P}.tar.xz"
 
 LICENSE="mpg123-el"
 SLOT="0"
-KEYWORDS="amd64 ppc x86"
+KEYWORDS="~amd64 ~ppc ~x86"
 
 RDEPEND="media-sound/mpg123
 	media-sound/alsa-utils"
 
 SITEFILE="50${PN}-gentoo.el"
-
-src_prepare() {
-	sed -i -e "s/\(mainloop:\)/\1 ;/" tagput.c || die
-}
 
 src_compile() {
 	$(tc-getCC) ${CFLAGS} ${LDFLAGS} -o tagput tagput.c || die
