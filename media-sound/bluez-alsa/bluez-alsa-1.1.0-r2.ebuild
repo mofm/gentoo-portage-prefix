@@ -3,7 +3,7 @@
 # $Id$
 
 EAPI=6
-inherit autotools eutils multilib-minimal
+inherit autotools eutils
 
 DESCRIPTION="Bluetooth Audio ALSA Backend"
 HOMEPAGE="https://github.com/Arkq/bluez-alsa"
@@ -18,17 +18,12 @@ fi
 
 LICENSE="MIT"
 SLOT="0"
-IUSE="aac debug hcitop"
+IUSE="debug"
 
-RDEPEND=">=dev-libs/glib-2.16[dbus,${MULTILIB_USEDEP}]
-	>=media-libs/alsa-lib-1.0[${MULTILIB_USEDEP}]
-	>=media-libs/sbc-1.2[${MULTILIB_USEDEP}]
-	>=net-wireless/bluez-5[${MULTILIB_USEDEP}]
-	aac? ( >=media-libs/fdk-aac-0.1.1[${MULTILIB_USEDEP}] )
-	hcitop? (
-		dev-libs/libbsd
-		sys-libs/ncurses:0=
-	)"
+RDEPEND=">=dev-libs/glib-2.16[dbus]
+	>=media-libs/alsa-lib-1.0
+	>=media-libs/sbc-1.2
+	>=net-wireless/bluez-5"
 DEPEND="${RDEPEND}
 	net-libs/ortp
 	virtual/pkgconfig"
@@ -38,15 +33,12 @@ src_prepare() {
 	eautoreconf
 }
 
-multilib_src_configure() {
-	ECONF_SOURCE="${S}" \
+src_configure() {
 	econf \
-		$(use_enable aac) \
-		$(use_enable debug) \
-		$(multilib_native_use_enable hcitop)
+		$(use_enable debug)
 }
 
-multilib_src_install_all() {
+src_install() {
 	default
 	prune_libtool_files --modules
 
