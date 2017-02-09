@@ -264,6 +264,7 @@ x86-linux		prefix/linux-standalone/x86			dev
 x86-linux		prefix/linux-standalone/x86/legacy		dev
 arm-linux		prefix/linux-standalone/arm/armv7a		dev
 arm64-linux		prefix/linux-standalone/arm64			dev
+ppc64-linux		prefix/linux-standalone/ppc64			dev
 
 # Mac OS X Profiles
 ppc-macos		prefix/darwin/macos/10.4/ppc			dev
