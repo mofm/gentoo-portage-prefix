@@ -8,25 +8,33 @@ KEYWORDS="~amd64 ~arm"
 VER_PREFIX="kinetic-"
 ROS_SUBDIR=${PN}
 CATKIN_HAS_MESSAGES=yes
-PYTHON_COMPAT=( python{2_7,3_4,3_5} )
+PYTHON_COMPAT=( python2_7 )
 CATKIN_MESSAGES_TRANSITIVE_DEPS="dev-ros/std_msgs dev-ros/geometry_msgs"
 
 inherit ros-catkin
 
-DESCRIPTION="Estimates the camera position with respect to its effector using the ViSP library"
+DESCRIPTION="Wraps the ViSP moving edge tracker provided by the ViSP visual servoing library into a ROS package"
 LICENSE="GPL-2"
 SLOT="0"
 IUSE=""
 
 RDEPEND="
+	dev-libs/boost:=[threads]
+	dev-ros/dynamic_reconfigure
+	dev-ros/geometry_msgs[${CATKIN_MESSAGES_PYTHON_USEDEP}]
 	dev-ros/image_proc
+	dev-ros/image_transport
+	dev-ros/nodelet
+	dev-ros/resource_retriever
 	dev-ros/roscpp
 	dev-ros/sensor_msgs
-	dev-ros/visp_bridge
-	dev-ros/visp_tracker
-	sci-libs/ViSP:=
+	dev-ros/tf[${PYTHON_USEDEP}]
+	dev-ros/rospy[${PYTHON_USEDEP}]
+	dev-python/numpy[${PYTHON_USEDEP}]
+	sci-libs/ViSP[opencv,X]
 "
 DEPEND="${RDEPEND}"
 if [ "${PV#9999}" = "${PV}" ] ; then
 	S="${WORKDIR}/vision_visp-kinetic-${PV}/${ROS_SUBDIR}"
 fi
+PATCHES=( "${FILESDIR}/gcc6.patch" )
