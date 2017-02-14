@@ -16,7 +16,7 @@ HOMEPAGE="https://mpv.io/"
 
 if [[ ${PV} != *9999* ]]; then
 	SRC_URI="https://github.com/mpv-player/mpv/archive/v${PV}.tar.gz -> ${P}.tar.gz"
-	KEYWORDS="~amd64 ~hppa ~x86 ~amd64-linux"
+	KEYWORDS="~alpha ~amd64 ~arm ~hppa ~ppc ~ppc64 ~sparc ~x86 ~amd64-linux"
 	DOCS=( RELEASE_NOTES )
 else
 	EGIT_REPO_URI=( {https,git}://github.com/mpv-player/mpv.git )
@@ -28,8 +28,8 @@ DOCS+=( README.md )
 # See Copyright in sources and Gentoo bug 506946. Waf is BSD, libmpv is ISC.
 LICENSE="GPL-2+ BSD ISC"
 SLOT="0"
-IUSE="+alsa aqua archive bluray cdda +cli coreaudio cplugins cuda doc drm dvb
-	dvd +egl encode gbm +iconv jack jpeg lcms +libass libav libcaca libmpv +lua
+IUSE="+alsa aqua archive bluray cdda +cli coreaudio doc drm dvb dvd +egl +enca
+	encode gbm +iconv jack jpeg lcms +libass libav libcaca libguess libmpv +lua
 	luajit openal +opengl oss pulseaudio raspberry-pi rubberband samba sdl
 	selinux test tools +uchardet v4l vaapi vdpau vf-dlopen wayland +X xinerama
 	+xscreensaver +xv zsh-completion"
@@ -38,10 +38,11 @@ IUSE+=" cpu_flags_x86_sse4_1"
 REQUIRED_USE="
 	|| ( cli libmpv )
 	aqua? ( opengl )
-	cuda? ( !libav || ( opengl egl ) )
 	egl? ( || ( gbm X wayland ) )
+	enca? ( iconv )
 	gbm? ( drm egl )
 	lcms? ( || ( opengl egl ) )
+	libguess? ( iconv )
 	luajit? ( lua )
 	opengl? ( || ( aqua X !cli? ( libmpv ) ) )
 	test? ( || ( opengl egl ) )
@@ -58,14 +59,13 @@ REQUIRED_USE="
 "
 
 COMMON_DEPEND="
-	!libav? ( >=media-video/ffmpeg-3.2.2:0=[encode?,threads,vaapi?,vdpau?] )
-	libav? ( >=media-video/libav-12:0=[encode?,threads,vaapi?,vdpau?] )
+	!libav? ( >=media-video/ffmpeg-2.4:0=[encode?,threads,vaapi?,vdpau?] )
+	libav? ( >=media-video/libav-11:0=[encode?,threads,vaapi?,vdpau?] )
 	sys-libs/zlib
 	alsa? ( >=media-libs/alsa-lib-1.0.18 )
 	archive? ( >=app-arch/libarchive-3.0.0:= )
 	bluray? ( >=media-libs/libbluray-0.3.0 )
 	cdda? ( dev-libs/libcdio-paranoia )
-	cuda? ( >=media-video/ffmpeg-3.3:0 )
 	drm? ( x11-libs/libdrm )
 	dvd? (
 		>=media-libs/libdvdnav-4.2.0
@@ -74,6 +74,8 @@ COMMON_DEPEND="
 	egl? ( media-libs/mesa[egl,gbm(-)?,wayland(-)?] )
 	iconv? (
 		virtual/libiconv
+		enca? ( app-i18n/enca )
+		libguess? ( >=app-i18n/libguess-1.0 )
 		uchardet? ( app-i18n/uchardet )
 	)
 	jack? ( virtual/jack )
@@ -117,23 +119,22 @@ COMMON_DEPEND="
 "
 DEPEND="${COMMON_DEPEND}
 	${PYTHON_DEPS}
+	dev-lang/perl
 	dev-python/docutils
 	virtual/pkgconfig
 	doc? ( dev-python/rst2pdf )
 	dvb? ( virtual/linuxtv-dvb-headers )
 	test? ( >=dev-util/cmocka-1.0.0 )
 	v4l? ( virtual/os-headers )
-	zsh-completion? ( dev-lang/perl )
 "
 RDEPEND="${COMMON_DEPEND}
-	cuda? ( x11-drivers/nvidia-drivers[X] )
 	selinux? ( sec-policy/selinux-mplayer )
 	tools? ( ${PYTHON_DEPS} )
 "
 
 PATCHES=(
 	"${FILESDIR}/${PN}-0.19.0-make-ffmpeg-version-check-non-fatal.patch"
-	"${FILESDIR}/${PN}-0.23.0-make-libavdevice-check-accept-libav.patch"
+	"${FILESDIR}/${PN}-rely-on-pkgconfig-for-raspberrypi-compiler-flags.patch"
 )
 
 mpv_check_compiler() {
@@ -191,7 +192,6 @@ src_configure() {
 		--enable-html-build
 
 		$(use_enable doc pdf-build)
-		$(use_enable cplugins)
 		$(use_enable vf-dlopen vf-dlopen-filters)
 		$(use_enable zsh-completion zsh-comp)
 		$(use_enable test)
@@ -207,6 +207,8 @@ src_configure() {
 		$(use_enable dvd dvdread)
 		$(use_enable dvd dvdnav)
 		$(use_enable cdda)
+		$(use_enable enca)
+		$(use_enable libguess)
 		$(use_enable uchardet)
 		$(use_enable rubberband)
 		$(use_enable lcms lcms2)
@@ -263,8 +265,8 @@ src_configure() {
 		# HWaccels:
 		# Automagic Video Toolbox HW acceleration. See Gentoo bug 577332.
 		$(use_enable vaapi vaapi-hwaccel)
-		$(use_enable vdpau vdpau-hwaccel)
-		$(use_enable cuda cuda-hwaccel)
+		# Automagic VDPAU HW acceleration. See Gentoo bug 558870.
+		--disable-cuda			# No support in ffmpeg. See Gentoo bug 595450.
 
 		# TV features:
 		$(use_enable v4l tv)
