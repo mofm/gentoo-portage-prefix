@@ -9,22 +9,26 @@ EAPI=6
 CMAKE_MIN_VERSION=3.7.0-r1
 PYTHON_COMPAT=( python2_7 )
 
-inherit cmake-utils git-r3 llvm python-any-r1
+inherit cmake-utils llvm python-any-r1
 
 DESCRIPTION="The LLVM linker (link editor)"
 HOMEPAGE="http://llvm.org/"
-SRC_URI=""
-EGIT_REPO_URI="http://llvm.org/git/lld.git
-	https://github.com/llvm-mirror/lld.git"
+SRC_URI="http://www.llvm.org/pre-releases/${PV/_//}/${P/_/}.src.tar.xz
+	test? ( http://www.llvm.org/pre-releases/${PV/_//}/llvm-${PV/_/}.src.tar.xz )"
 
 LICENSE="UoI-NCSA"
 SLOT="0"
-KEYWORDS=""
+KEYWORDS="~amd64 ~arm64 ~x86"
 IUSE="test"
 
 RDEPEND="~sys-devel/llvm-${PV}"
 DEPEND="${RDEPEND}
 	test? ( $(python_gen_any_dep "~dev-python/lit-${PV}[\${PYTHON_USEDEP}]") )"
+
+S=${WORKDIR}/${P/_/}.src
+
+# TODO: fix test suite to build stand-alone
+RESTRICT="test"
 
 # least intrusive of all
 CMAKE_BUILD_TYPE=RelWithDebInfo
@@ -34,23 +38,16 @@ python_check_deps() {
 }
 
 pkg_setup() {
-	llvm_pkg_setup
+	LLVM_MAX_SLOT=${PV%%.*} llvm_pkg_setup
 	use test && python-any-r1_pkg_setup
 }
 
 src_unpack() {
-	if use test; then
-		# needed for patched gtest
-		git-r3_fetch "http://llvm.org/git/llvm.git
-			https://github.com/llvm-mirror/llvm.git"
-	fi
-	git-r3_fetch
+	default
 
 	if use test; then
-		git-r3_checkout http://llvm.org/git/llvm.git \
-			"${WORKDIR}"/llvm
+		mv llvm-* llvm || die
 	fi
-	git-r3_checkout
 }
 
 src_configure() {

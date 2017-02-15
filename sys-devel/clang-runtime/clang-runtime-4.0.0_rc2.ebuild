@@ -11,11 +11,16 @@ HOMEPAGE="http://clang.llvm.org/"
 SRC_URI=""
 
 LICENSE="metapackage"
-SLOT="0"
-KEYWORDS="~amd64 ~x86 ~amd64-fbsd ~x86-fbsd ~ppc-macos ~x64-macos ~x86-macos"
-IUSE="libcxx openmp"
+SLOT="${PV%_*}"
+KEYWORDS="~amd64 ~arm64 ~x86"
+IUSE="+compiler-rt libcxx openmp +sanitize"
 
-# compiler-rt is installed unconditionally
 RDEPEND="
+	compiler-rt? (
+		~sys-libs/compiler-rt-${PV}:${SLOT}
+		sanitize? ( ~sys-libs/compiler-rt-sanitizers-${PV}:${SLOT} )
+	)
 	libcxx? ( >=sys-libs/libcxx-${PV}[${MULTILIB_USEDEP}] )
 	openmp? ( >=sys-libs/libomp-${PV}[${MULTILIB_USEDEP}] )"
+
+REQUIRED_USE="sanitize? ( compiler-rt )"

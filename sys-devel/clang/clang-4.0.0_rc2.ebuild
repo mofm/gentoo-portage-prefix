@@ -9,14 +9,14 @@ EAPI=6
 CMAKE_MIN_VERSION=3.7.0-r1
 PYTHON_COMPAT=( python2_7 )
 
-inherit check-reqs cmake-utils flag-o-matic git-r3 llvm multilib-minimal \
+inherit check-reqs cmake-utils flag-o-matic llvm multilib-minimal \
 	python-single-r1 toolchain-funcs pax-utils versionator
 
 DESCRIPTION="C language family frontend for LLVM"
 HOMEPAGE="http://llvm.org/"
-SRC_URI=""
-EGIT_REPO_URI="http://llvm.org/git/clang.git
-	https://github.com/llvm-mirror/clang.git"
+SRC_URI="http://www.llvm.org/pre-releases/${PV/_//}/cfe-${PV/_/}.src.tar.xz
+	http://www.llvm.org/pre-releases/${PV/_//}/clang-tools-extra-${PV/_/}.src.tar.xz
+	test? ( http://www.llvm.org/pre-releases/${PV/_//}/llvm-${PV/_/}.src.tar.xz )"
 
 # Keep in sync with sys-devel/llvm
 ALL_LLVM_TARGETS=( AArch64 AMDGPU ARM BPF Hexagon Lanai Mips MSP430
@@ -25,8 +25,8 @@ ALL_LLVM_TARGETS=( "${ALL_LLVM_TARGETS[@]/#/llvm_targets_}" )
 LLVM_TARGET_USEDEPS=${ALL_LLVM_TARGETS[@]/%/?}
 
 LICENSE="UoI-NCSA"
-SLOT="5"
-KEYWORDS=""
+SLOT="$(get_major_version)"
+KEYWORDS="~amd64 ~arm64 ~x86"
 IUSE="debug default-compiler-rt default-libcxx +doc multitarget
 	+static-analyzer test xml elibc_musl kernel_FreeBSD ${ALL_LLVM_TARGETS[*]}"
 
@@ -55,7 +55,7 @@ REQUIRED_USE="${PYTHON_REQUIRED_USE}
 	multitarget? ( ${ALL_LLVM_TARGETS[*]} )"
 
 # We need extra level of indirection for CLANG_RESOURCE_DIR
-S=${WORKDIR}/x/y/${P}
+S=${WORKDIR}/x/y/cfe-${PV/_/}.src
 
 # least intrusive of all
 CMAKE_BUILD_TYPE=RelWithDebInfo
@@ -108,26 +108,16 @@ pkg_setup() {
 }
 
 src_unpack() {
-	# create extra parent dir for CLANG_RESOURCE_DIR
+	# create extra parent dirs for CLANG_RESOURCE_DIR
 	mkdir -p x/y || die
 	cd x/y || die
 
-	git-r3_fetch "http://llvm.org/git/clang-tools-extra.git
-		https://github.com/llvm-mirror/clang-tools-extra.git"
-	if use test; then
-		# needed for patched gtest
-		git-r3_fetch "http://llvm.org/git/llvm.git
-			https://github.com/llvm-mirror/llvm.git"
-	fi
-	git-r3_fetch
+	default
 
-	git-r3_checkout http://llvm.org/git/clang-tools-extra.git \
-		"${S}"/tools/extra
+	mv clang-tools-extra-* "${S}"/tools/extra || die
 	if use test; then
-		git-r3_checkout http://llvm.org/git/llvm.git \
-			"${WORKDIR}"/llvm
+		mv llvm-* "${WORKDIR}"/llvm || die
 	fi
-	git-r3_checkout "${EGIT_REPO_URI}" "${S}"
 }
 
 src_prepare() {
@@ -136,6 +126,9 @@ src_prepare() {
 
 	# fix stand-alone doc build
 	eapply "${FILESDIR}"/9999/0007-cmake-Support-stand-alone-Sphinx-doxygen-doc-build.patch
+
+	# kill extraneous deps
+	sed -i -e '/FileCheck/d' tools/extra/test/CMakeLists.txt || die
 
 	# User patches
 	eapply_user
@@ -182,6 +175,9 @@ multilib_src_configure() {
 			-DLLVM_BUILD_DOCS=$(usex doc)
 			-DLLVM_ENABLE_SPHINX=$(usex doc)
 			-DLLVM_ENABLE_DOXYGEN=OFF
+
+			# workaround pthread
+			-DPTHREAD_LIB=-pthread
 		)
 		use doc && mycmakeargs+=(
 			-DCLANG_INSTALL_SPHINX_HTML_DIR="${EPREFIX}/usr/share/doc/${PF}/html"

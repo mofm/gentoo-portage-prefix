@@ -9,17 +9,16 @@ EAPI=6
 CMAKE_MIN_VERSION=3.7.0-r1
 PYTHON_COMPAT=( python2_7 )
 
-inherit cmake-utils git-r3 llvm python-single-r1 toolchain-funcs
+inherit cmake-utils llvm python-single-r1 toolchain-funcs
 
 DESCRIPTION="The LLVM debugger"
 HOMEPAGE="http://llvm.org/"
-SRC_URI=""
-EGIT_REPO_URI="http://llvm.org/git/lldb.git
-	https://github.com/llvm-mirror/lldb.git"
+SRC_URI="http://www.llvm.org/pre-releases/${PV/_//}/${P/_/}.src.tar.xz
+	test? ( http://www.llvm.org/pre-releases/${PV/_//}/llvm-${PV/_/}.src.tar.xz )"
 
 LICENSE="UoI-NCSA"
 SLOT="0"
-KEYWORDS=""
+KEYWORDS="~amd64 ~arm64 ~x86"
 IUSE="libedit ncurses python test"
 
 RDEPEND="
@@ -39,27 +38,22 @@ DEPEND="${RDEPEND}
 
 REQUIRED_USE=${PYTHON_REQUIRED_USE}
 
+S=${WORKDIR}/${P/_/}.src
+
 # least intrusive of all
 CMAKE_BUILD_TYPE=RelWithDebInfo
 
 pkg_setup() {
-	llvm_pkg_setup
+	LLVM_MAX_SLOT=${PV%%.*} llvm_pkg_setup
 	python-single-r1_pkg_setup
 }
 
 src_unpack() {
-	if use test; then
-		# needed for patched gtest
-		git-r3_fetch "http://llvm.org/git/llvm.git
-			https://github.com/llvm-mirror/llvm.git"
-	fi
-	git-r3_fetch
+	default
 
 	if use test; then
-		git-r3_checkout http://llvm.org/git/llvm.git \
-			"${WORKDIR}"/llvm
+		mv llvm-* llvm || die
 	fi
-	git-r3_checkout
 }
 
 src_configure() {
