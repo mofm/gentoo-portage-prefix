@@ -18,7 +18,7 @@ else
 	MY_P="${PN}_${PV}"
 	SRC_URI="http://dev.lshift.net/paul/mercurial-server/${MY_P}.tar.gz"
 	KEYWORDS="~amd64 ~x86"
-	S="${WORKDIR}/${MY_P}"
+	S="${WORKDIR}/${MY_P}.orig"
 fi
 
 DESCRIPTION="Mercurial authentication and authorization tools"
