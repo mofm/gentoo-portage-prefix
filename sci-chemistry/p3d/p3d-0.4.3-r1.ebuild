@@ -6,15 +6,17 @@ EAPI=6
 
 PYTHON_COMPAT=( python2_7 )
 
-inherit distutils-r1 git-r3 versionator
+inherit distutils-r1 vcs-snapshot versionator
+
+MY_P="${PN}-$(replace_version_separator 3 -)"
+GITHUB_ID="gb8b9a75"
 
 DESCRIPTION="Python module for structural bioinformatics"
 HOMEPAGE="http://p3d.fufezan.net/"
-SRC_URI=""
-EGIT_REPO_URI="https://github.com/fu/p3d.git"
+SRC_URI="https://nodeload.github.com/fu/${PN}/tarball/${PV} -> ${P}.tar.gz"
 
 SLOT="0"
-KEYWORDS=""
+KEYWORDS="~amd64 ~x86 ~amd64-linux ~x86-linux"
 LICENSE="GPL-3"
 IUSE="examples"
 
@@ -23,6 +25,6 @@ src_install() {
 
 	if use examples; then
 		insinto /usr/share/${PN}
-		doins -r pdbs exampleScripts || die
+		doins -r pdbs exampleScripts
 	fi
 }
