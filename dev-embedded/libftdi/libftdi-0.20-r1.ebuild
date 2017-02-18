@@ -7,29 +7,24 @@ EAPI=6
 PYTHON_COMPAT=( python2_7 python3_4 python3_5 python3_6 )
 inherit cmake-utils python-single-r1
 
-MY_P="${PN}1-${PV}"
 if [[ ${PV} == 9999* ]] ; then
 	EGIT_REPO_URI="git://developer.intra2net.com/${PN}"
-	inherit git-r3
+	inherit git-2
 else
-	SRC_URI="http://www.intra2net.com/en/developer/${PN}/download/${MY_P}.tar.bz2"
-	KEYWORDS="~amd64 ~arm ~arm64 ~mips ~ppc ~ppc64 ~sparc ~x86"
+	SRC_URI="http://www.intra2net.com/en/developer/${PN}/download/${P}.tar.gz"
+	KEYWORDS="~amd64 ~arm ~ppc ~ppc64 ~sparc ~x86"
 fi
 
 DESCRIPTION="Userspace access to FTDI USB interface chips"
 HOMEPAGE="http://www.intra2net.com/en/developer/libftdi/"
 
 LICENSE="LGPL-2"
-SLOT="1"
-IUSE="cxx doc examples python static-libs test tools"
+SLOT="0"
+IUSE="cxx doc examples python"
 
-RDEPEND="virtual/libusb:1
+RDEPEND="virtual/libusb:0
 	cxx? ( dev-libs/boost )
-	python? ( ${PYTHON_DEPS} )
-	tools? (
-		!<dev-embedded/ftdi_eeprom-1.0
-		dev-libs/confuse
-	)"
+	python? ( ${PYTHON_DEPS} )"
 DEPEND="${RDEPEND}
 	python? ( dev-lang/swig )
 	doc? ( app-doc/doxygen )"
@@ -40,7 +35,19 @@ pkg_setup() {
 	use python && python-single-r1_pkg_setup
 }
 
-S=${WORKDIR}/${MY_P}
+src_prepare() {
+	if use python; then
+		sed -i \
+			-e "s:[$]{PYTHON_LIB_INSTALL}/../site-packages:$(python_get_sitedir):" \
+			bindings/CMakeLists.txt || die
+	fi
+	sed -i \
+		-e '/SET(LIB_SUFFIX /d' \
+		CMakeLists.txt || die
+
+	eapply "${FILESDIR}"/${P}-cmake-{include,version}.patch
+	eapply_user
+}
 
 src_configure() {
 	mycmakeargs=(
@@ -48,9 +55,6 @@ src_configure() {
 		-DDOCUMENTATION=$(usex doc)
 		-DEXAMPLES=$(usex examples)
 		-DPYTHON_BINDINGS=$(usex python)
-		-DSTATICLIBS=$(usex static-libs)
-		-DBUILD_TESTS=$(usex test)
-		-DFTDI_EEPROM=$(usex tools)
 		-DCMAKE_SKIP_BUILD_RPATH=ON
 	)
 	cmake-utils_src_configure
@@ -59,11 +63,11 @@ src_configure() {
 src_install() {
 	cmake-utils_src_install
 	use python && python_optimize
-	dodoc AUTHORS ChangeLog README TODO
+	dodoc ChangeLog README
 
 	if use doc ; then
 		# Clean up crap man pages. #356369
-		rm -vf "${CMAKE_BUILD_DIR}"/doc/man/man3/_* || die
+		rm -vf "${CMAKE_BUILD_DIR}"/doc/man/man3/{_,usb_,deprecated}*
 
 		doman "${CMAKE_BUILD_DIR}"/doc/man/man3/*
 		dodoc -r "${CMAKE_BUILD_DIR}"/doc/html
