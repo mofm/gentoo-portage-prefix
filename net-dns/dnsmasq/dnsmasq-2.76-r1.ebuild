@@ -1,6 +1,5 @@
-# Copyright 1999-2016 Gentoo Foundation
+# Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Id$
 
 EAPI=6
 
@@ -51,10 +50,6 @@ RDEPEND="${CDEPEND}
 REQUIRED_USE="dhcp-tools? ( dhcp )
 	lua? ( script )"
 
-PATCHES=(
-	"${FILESDIR}/${P}-handle-binding-upstream-servers-to-an-interface.patch"
-)
-
 use_have() {
 	local useflag no_only uword
 	if [[ $1 == '-n' ]]; then
@@ -71,9 +66,9 @@ use_have() {
 		uword="${uword^^}"
 
 		if ! use "${useflag}"; then
-			printf " -DNO_%s" "${uword}"
+			echo -n " -DNO_${uword}"
 		elif [[ -z "${no_only}" ]]; then
-			printf " -DHAVE_%s" "${uword}"
+			echo -n " -DHAVE_${uword}"
 		fi
 		uword="${1}"
 		shift
@@ -116,19 +111,19 @@ src_configure() {
 
 src_compile() {
 	emake \
-		PREFIX="${EPREFIX}/usr" \
-		MANDIR="${EPREFIX}/usr/share/man" \
+		PREFIX=/usr \
+		MANDIR=/usr/share/man \
 		CC="$(tc-getCC)" \
 		PKG_CONFIG="$(tc-getPKG_CONFIG)" \
 		CFLAGS="${CFLAGS}" \
 		LDFLAGS="${LDFLAGS}" \
 		COPTS="${COPTS}" \
-		CONFFILE="${EPREFIX}/etc/${PN}.conf" \
+		CONFFILE="/etc/${PN}.conf" \
 		all$(use nls && echo "-i18n")
 
 	use dhcp-tools && emake -C contrib/lease-tools \
-		PREFIX="${EPREFIX}/usr" \
-		MANDIR="${EPREFIX}/usr/share/man" \
+		PREFIX=/usr \
+		MANDIR=/usr/share/man \
 		CC="$(tc-getCC)" \
 		PKG_CONFIG="$(tc-getPKG_CONFIG)" \
 		CFLAGS="${CFLAGS}" \
@@ -142,13 +137,13 @@ src_install() {
 		PREFIX=/usr \
 		MANDIR=/usr/share/man \
 		COPTS="${COPTS}" \
-		DESTDIR="${ED}" \
+		DESTDIR="${D}" \
 		install$(use nls && echo "-i18n")
 
 	for lingua in ${DM_LINGUAS}; do
 		use linguas_${lingua} || rm -rf "${D}"/usr/share/locale/${lingua}
 	done
-	[[ -d "${ED}"/usr/share/locale/ ]] && rmdir --ignore-fail-on-non-empty "${ED}"/usr/share/locale/
+	[[ -d "${D}"/usr/share/locale/ ]] && rmdir --ignore-fail-on-non-empty "${D}"/usr/share/locale/
 
 	dodoc CHANGELOG CHANGELOG.archive FAQ dnsmasq.conf.example
 	dodoc -r logo
@@ -177,6 +172,10 @@ src_install() {
 	if use dhcp-tools; then
 		dosbin contrib/lease-tools/{dhcp_release,dhcp_lease_time}
 		doman contrib/lease-tools/{dhcp_release,dhcp_lease_time}.1
+		if use ipv6; then
+			dosbin contrib/lease-tools/dhcp_release6
+			doman contrib/lease-tools/dhcp_release6.1
+		fi
 	fi
 
 	systemd_newunit "${FILESDIR}"/${PN}.service-r1 ${PN}.service
