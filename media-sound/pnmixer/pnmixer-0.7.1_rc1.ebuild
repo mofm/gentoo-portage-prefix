@@ -1,20 +1,17 @@
 # Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=6
+EAPI=5
 
-WANT_LIBTOOL=none
-inherit cmake-utils gnome2-utils git-r3
+inherit cmake-utils gnome2-utils
 
 DESCRIPTION="Volume mixer for the system tray"
 HOMEPAGE="https://github.com/nicklan/pnmixer"
-EGIT_REPO_URI="git@github.com:nicklan/pnmixer.git
-	https://github.com/nicklan/pnmixer.git"
-EGIT_BRANCH="master"
+SRC_URI="https://github.com/nicklan/pnmixer/archive/v${PV/_rc/-rc}.tar.gz -> ${P}.tar.gz"
 
 LICENSE="GPL-3"
 SLOT="0"
-KEYWORDS=""
+KEYWORDS="~amd64 ~x86"
 IUSE="libnotify"
 
 RDEPEND="dev-libs/glib:2
@@ -25,6 +22,8 @@ RDEPEND="dev-libs/glib:2
 DEPEND="${RDEPEND}
 	sys-devel/gettext
 	virtual/pkgconfig"
+
+S=${WORKDIR}/${PN}-${PV/_rc/-rc}
 
 src_configure() {
 	local mycmakeargs=(
