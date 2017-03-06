@@ -33,6 +33,8 @@ MULTILIB_WRAPPED_HEADERS=(
 src_prepare() {
 	default
 	elibtoolize
+	# https://lists.gnupg.org/pipermail/gnupg-devel/2017-March/032666.html
+	sed -e '/@no_undefined\s*=\s*$/s/$/-no-undefined/' -i src/Makefile.in || die
 }
 
 multilib_src_configure() {
