@@ -1,7 +1,7 @@
 # Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI="5"
+EAPI="6"
 
 PYTHON_COMPAT=( python2_7 )
 PYTHON_REQ_USE="ncurses?"
@@ -18,7 +18,7 @@ SLOT="0"
 KEYWORDS="~amd64 ~x86"
 LINGUAS="ar_SA bg_BG cs_CZ da_DK de_DE el_GR eo_UY es_ES fr_FR hu_HU hy_AM id_ID it_IT ja_JP ko_KR ky_KG lv_LV nb_NO nl_NL no_NO pl_PL pt_BR pt_PT ro_RO ru_RU sk_SK sl_SI ta_IN th_TH tr_TR vi_VN zh_CN"
 
-IUSE="cli cosign email greenaddress_it ncurses qrcode +qt4 sync trustedcoin_com vkb"
+IUSE="audio_modem cli cosign digitalbitbox email greenaddress_it ncurses qrcode +qt4 sync trustedcoin_com vkb"
 
 for lingua in ${LINGUAS}; do
 	IUSE+=" linguas_${lingua}"
@@ -26,7 +26,9 @@ done
 
 REQUIRED_USE="
 	|| ( cli ncurses qt4 )
+	audio_modem? ( qt4 )
 	cosign? ( qt4 )
+	digitalbitbox? ( qt4 )
 	email? ( qt4 )
 	greenaddress_it? ( qt4 )
 	qrcode? ( qt4 )
@@ -60,7 +62,7 @@ S="${WORKDIR}/${MY_P}"
 DOCS="RELEASE-NOTES"
 
 src_prepare() {
-	epatch "${FILESDIR}/${PV}-no-user-root.patch"
+	eapply "${FILESDIR}/${PV}-no-user-root.patch"
 
 	# Don't advise using PIP
 	sed -i "s/On Linux, try 'sudo pip install zbar'/Re-emerge Electrum with the qrcode USE flag/" lib/qrscanner.py || die
@@ -119,20 +121,24 @@ src_prepare() {
 	# trezor requires python trezorlib module
 	# keepkey requires trezor
 	for plugin in  \
-		$(usex cosign        '' cosigner_pool   ) \
+		$(usex audio_modem     '' audio_modem          ) \
+		$(usex cosign          '' cosigner_pool        ) \
+		$(usex digitalbitbox   '' digitalbitbox        ) \
+		$(usex email           '' email_requests       ) \
+		$(usex greenaddress_it '' greenaddress_instant ) \
 		hw_wallet \
 		ledger \
-		$(usex email         '' email_requests  ) \
-		$(usex greenaddress_it '' greenaddress_instant)  \
 		keepkey \
-		$(usex sync          '' labels          )  \
+		$(usex sync            '' labels               ) \
 		trezor  \
-		$(usex trustedcoin_com '' trustedcoin   )  \
-		$(usex vkb           '' virtualkeyboard )  \
+		$(usex trustedcoin_com '' trustedcoin          ) \
+		$(usex vkb             '' virtualkeyboard      ) \
 	; do
 		rm -r plugins/"${plugin}"* || die
 		sed -i "/${plugin}/d" setup.py || die
 	done
+
+	eapply_user
 
 	distutils-r1_src_prepare
 }
