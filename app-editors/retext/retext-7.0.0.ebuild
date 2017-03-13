@@ -1,25 +1,24 @@
 # Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=5
+EAPI=6
 
 PYTHON_COMPAT=( python3_{4,5} )
 
 PLOCALES="ca cs cy da de es et eu fr hu it ja pl pt pt_BR ru sk sr sr@latin uk zh_TW"
 
-inherit distutils-r1 git-r3 l10n
+inherit distutils-r1 l10n eutils
 
 MY_PN="ReText"
 MY_P="${MY_PN}-${PV/_/~}"
 
 DESCRIPTION="Simple editor for Markdown and reStructuredText"
 HOMEPAGE="https://github.com/retext-project/retext https://github.com/retext-project/retext/wiki"
-SRC_URI=""
-EGIT_REPO_URI="https://github.com/retext-project/retext.git"
+SRC_URI="mirror://pypi/${MY_PN:0:1}/${MY_PN}/${MY_P}.tar.gz"
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS=""
+KEYWORDS="~amd64 ~x86"
 IUSE="+spell"
 
 RDEPEND="
@@ -31,6 +30,8 @@ RDEPEND="
 	dev-python/PyQt5[gui,network,printsupport,webkit,widgets,${PYTHON_USEDEP}]
 	spell? ( dev-python/pyenchant[${PYTHON_USEDEP}] )
 "
+
+S="${WORKDIR}"/${MY_P}
 
 remove_locale() {
 	find "${ED}" -name "retext_${1}.qm" -delete || die "Failed to remove locale ${1}."
