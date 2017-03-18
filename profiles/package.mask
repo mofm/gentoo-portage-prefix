@@ -30,6 +30,11 @@
 #--- END OF EXAMPLES ---
 
 # Michael Palimaka <kensington@gentoo.org> (18 Mar 2017)
+# Broken. Dead upstream. Unmaintained.
+# Masked for removal in 30 days. Bug #604836.
+gnome-extra/zeitgeist-datasources
+
+# Michael Palimaka <kensington@gentoo.org> (18 Mar 2017)
 # Fails to run. Ancient. Unmaintained. Dead upstream.
 # Masked for removal in 30 days. Bug #605120.
 net-p2p/phxd
@@ -270,11 +275,6 @@ games-puzzle/kiki
 # Replaced by dev-libs/libp11.
 # Bug#609668. Removal in 30 days.
 dev-libs/engine_pkcs11
-
-# Michał Górny <mgorny@gentoo.org> (17 Feb 2017)
-# Reported to be broken. Last real upstream activity in 2011 with
-# a quick hack-fix in 2013. Removal in 30 days. Bug #591506.
-net-misc/orbited
 
 # Mart Raudsepp <leio@gentoo.org> (16 Feb 2017)
 # Old gstreamer 0.10 version, which is security vulnerable.
