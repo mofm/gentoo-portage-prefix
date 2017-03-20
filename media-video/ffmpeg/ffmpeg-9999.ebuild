@@ -54,7 +54,7 @@ LICENSE="
 	samba? ( GPL-3 )
 "
 if [ "${PV#9999}" = "${PV}" ] ; then
-	KEYWORDS="~alpha amd64 arm hppa ~mips ppc ppc64 x86 ~amd64-fbsd ~x86-fbsd ~amd64-linux ~arm-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~x64-solaris ~x86-solaris"
+	KEYWORDS="~alpha ~amd64 ~arm ~hppa ~ia64 ~mips ~ppc ~ppc64 ~sparc ~x86 ~amd64-fbsd ~x86-fbsd ~amd64-linux ~arm-linux ~x86-linux"
 fi
 
 # Options to use as use_enable in the foo[:bar] form.
@@ -78,9 +78,9 @@ FFMPEG_FLAG_MAP=(
 		schroedinger:libschroedinger speex:libspeex vorbis:libvorbis vpx:libvpx
 		zvbi:libzvbi
 		# libavfilter options
-		bs2b:libbs2b chromaprint ebur128:libebur128 flite:libflite frei0r
+		bs2b:libbs2b chromaprint flite:libflite frei0r
 		fribidi:libfribidi fontconfig ladspa libass truetype:libfreetype
-		rubberband:librubberband zimg:libzimg
+		rubberband:librubberband sofalizer:netcdf zeromq:libzmq zimg:libzimg
 		# libswresample options
 		libsoxr
 		# Threads; we only support pthread for now but ffmpeg supports more
@@ -104,6 +104,7 @@ IUSE="
 # Strings for CPU features in the useflag[:configure_option] form
 # if :configure_option isn't set, it will use 'useflag' as configure option
 ARM_CPU_FEATURES=( armv5te armv6 armv6t2 neon armvfp:vfp )
+ARM_CPU_REQUIRED_USE="arm64? ( armvfp neon )"
 MIPS_CPU_FEATURES=( mipsdspr1 mipsdspr2 mipsfpu )
 PPC_CPU_FEATURES=( altivec )
 X86_CPU_FEATURES_RAW=( 3dnow:amd3dnow 3dnowext:amd3dnowext aes:aesni avx:avx avx2:avx2 fma3:fma3 fma4:fma4 mmx:mmx mmxext:mmxext sse:sse sse2:sse2 sse3:sse3 ssse3:ssse3 sse4_1:sse4 sse4_2:sse42 xop:xop )
@@ -134,6 +135,7 @@ IUSE="${IUSE}
 "
 
 CPU_REQUIRED_USE="
+	${ARM_CPU_REQUIRED_USE}
 	${X86_CPU_REQUIRED_USE}
 "
 
@@ -161,7 +163,6 @@ RDEPEND="
 	cdio? ( >=dev-libs/libcdio-paranoia-0.90_p1-r1[${MULTILIB_USEDEP}] )
 	celt? ( >=media-libs/celt-0.11.1-r1[${MULTILIB_USEDEP}] )
 	chromaprint? ( >=media-libs/chromaprint-1.2-r1[${MULTILIB_USEDEP}] )
-	ebur128? ( >=media-libs/libebur128-1.1.0[${MULTILIB_USEDEP}] )
 	encode? (
 		amrenc? ( >=media-libs/vo-amrwbenc-0.1.2-r1[${MULTILIB_USEDEP}] )
 		kvazaar? ( media-libs/kvazaar[${MULTILIB_USEDEP}] )
@@ -220,6 +221,10 @@ RDEPEND="
 	samba? ( >=net-fs/samba-3.6.23-r1[${MULTILIB_USEDEP}] )
 	schroedinger? ( >=media-libs/schroedinger-1.0.11-r1[${MULTILIB_USEDEP}] )
 	sdl? ( media-libs/libsdl2[sound,video,${MULTILIB_USEDEP}] )
+	sofalizer? (
+		>=sci-libs/netcdf-4.3.2-r1[hdf5]
+		>=sci-libs/hdf5-1.8.18[hl]
+	)
 	speex? ( >=media-libs/speex-1.2_rc1-r1[${MULTILIB_USEDEP}] )
 	ssh? ( >=net-libs/libssh-0.5.5[${MULTILIB_USEDEP}] )
 	truetype? ( >=media-libs/freetype-2.5.0.1:2[${MULTILIB_USEDEP}] )
@@ -237,7 +242,8 @@ RDEPEND="
 		>=x11-libs/libXv-1.0.10[${MULTILIB_USEDEP}]
 	)
 	xcb? ( >=x11-libs/libxcb-1.4[${MULTILIB_USEDEP}] )
-	zimg? ( media-libs/zimg[${MULTILIB_USEDEP}] )
+	zeromq? ( >=net-libs/zeromq-4.1.6 )
+	zimg? ( >=media-libs/zimg-2.4:=[${MULTILIB_USEDEP}] )
 	zlib? ( >=sys-libs/zlib-1.2.8-r1[${MULTILIB_USEDEP}] )
 	zvbi? ( >=media-libs/zvbi-0.2.35[${MULTILIB_USEDEP}] )
 	!media-video/qt-faststart
@@ -292,10 +298,6 @@ src_prepare() {
 		export revision=git-N-${FFMPEG_REVISION}
 	fi
 	default
-
-	# the version script on Solaris causes invalid symbol version problems
-	# we don't want their hacky workarounds, we're having a GNU ld
-	sed -i -e 's/sunos)/sunos) network_extralibs="-lsocket -lnsl"; add_cppflags -D__EXTENSIONS__; enable pic; disable symver ;; no-sunos)/' configure || die
 }
 
 multilib_src_configure() {
@@ -340,7 +342,7 @@ multilib_src_configure() {
 
 	# (temporarily) disable non-multilib deps
 	if ! multilib_is_native_abi; then
-		for i in frei0r ; do
+		for i in frei0r netcdf libzmq ; do
 			myconf+=( --disable-${i} )
 		done
 	fi
