@@ -4,25 +4,26 @@
 EAPI=5
 
 PYTHON_COMPAT=(python{2_7,3_4,3_5})
-inherit bash-completion-r1 distutils-r1 eutils git-r3
+inherit bash-completion-r1 distutils-r1 eutils
 
 DESCRIPTION="Download videos from YouTube.com (and more sites...)"
 HOMEPAGE="https://rg3.github.com/youtube-dl/"
-EGIT_REPO_URI="https://github.com/rg3/youtube-dl.git"
+SRC_URI="http://youtube-dl.org/downloads/${PV}/${P}.tar.gz"
 
 LICENSE="public-domain"
 SLOT="0"
-KEYWORDS=""
-IUSE="offensive test"
+KEYWORDS="~amd64 ~arm ~hppa ~ppc ~ppc64 ~x86 ~amd64-linux ~arm-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~x86-solaris"
+IUSE="+offensive test"
 
 RDEPEND="
 	dev-python/setuptools[${PYTHON_USEDEP}]
 "
 DEPEND="
 	${RDEPEND}
-	dev-python/sphinx[${PYTHON_USEDEP}]
 	test? ( dev-python/nose[coverage(+)] )
 "
+
+S="${WORKDIR}/${PN}"
 
 python_prepare_all() {
 	if ! use offensive; then
@@ -80,7 +81,16 @@ python_test() {
 }
 
 python_install_all() {
-	dodoc README.md
+	dodoc README.txt
+	doman ${PN}.1
+
+	newbashcomp ${PN}.bash-completion ${PN}
+
+	insinto /usr/share/zsh/site-functions
+	newins youtube-dl.zsh _youtube-dl
+
+	insinto /usr/share/fish/completions
+	doins youtube-dl.fish
 
 	distutils-r1_python_install_all
 
