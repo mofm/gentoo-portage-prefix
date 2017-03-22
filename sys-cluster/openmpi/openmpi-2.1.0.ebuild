@@ -24,15 +24,14 @@ IUSE_OPENMPI_OFED_FEATURES="
 	openmpi_ofed_features_connectx-xrc
 	openmpi_ofed_features_udcm
 	openmpi_ofed_features_rdmacm
-	openmpi_ofed_features_dynamic-sl
-	openmpi_ofed_features_failover"
+	openmpi_ofed_features_dynamic-sl"
 
 DESCRIPTION="A high-performance message passing library (MPI)"
 HOMEPAGE="http://www.open-mpi.org"
 SRC_URI="http://www.open-mpi.org/software/ompi/v$(get_version_component_range 1-2)/downloads/${MY_P}.tar.bz2"
 LICENSE="BSD"
 SLOT="0"
-KEYWORDS="~alpha amd64 arm ~ia64 ~ppc ~ppc64 ~sparc x86 ~amd64-fbsd ~x86-fbsd ~amd64-linux"
+KEYWORDS="~alpha ~amd64 ~arm ~ia64 ~ppc ~ppc64 ~sparc ~x86 ~amd64-fbsd ~x86-fbsd ~amd64-linux"
 IUSE="cma cuda cxx elibc_FreeBSD fortran heterogeneous ipv6 java mpi-threads numa romio threads
 	${IUSE_OPENMPI_FABRICS} ${IUSE_OPENMPI_RM} ${IUSE_OPENMPI_OFED_FEATURES}"
 
@@ -43,8 +42,7 @@ REQUIRED_USE="openmpi_rm_slurm? ( !openmpi_rm_pbs )
 	openmpi_ofed_features_connectx-xrc? ( openmpi_fabrics_ofed )
 	openmpi_ofed_features_udcm? ( openmpi_fabrics_ofed )
 	openmpi_ofed_features_rdmacm? ( openmpi_fabrics_ofed )
-	openmpi_ofed_features_dynamic-sl? ( openmpi_fabrics_ofed )
-	openmpi_ofed_features_failover? ( openmpi_fabrics_ofed )"
+	openmpi_ofed_features_dynamic-sl? ( openmpi_fabrics_ofed )"
 
 # dev-util/nvidia-cuda-toolkit is always multilib
 CDEPEND="
@@ -131,7 +129,6 @@ multilib_src_configure() {
 		$(multilib_native_use_enable openmpi_ofed_features_rdmacm openib-rdmacm) \
 		$(multilib_native_use_enable openmpi_ofed_features_udcm openib-udcm) \
 		$(multilib_native_use_enable openmpi_ofed_features_dynamic-sl openib-dynamic-sl) \
-		$(multilib_native_use_enable openmpi_ofed_features_failover btl-openib-failover) \
 		$(multilib_native_use_with openmpi_rm_pbs tm) \
 		$(multilib_native_use_with openmpi_rm_slurm slurm)
 }
