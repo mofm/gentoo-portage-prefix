@@ -4,17 +4,16 @@
 EAPI=6
 PYTHON_COMPAT=( python2_7 python3_4 )
 
-inherit distutils-r1 eutils git-r3 linux-info multilib user
+inherit distutils-r1 eutils linux-info multilib user
 
 DESCRIPTION="Cloud computing fabric controller (main part of an IaaS system) in Python"
 HOMEPAGE="https://launchpad.net/nova"
-SRC_URI="https://dev.gentoo.org/~prometheanfire/dist/openstack/nova/ocata/nova.conf.sample -> nova.conf.sample-${PV}"
-EGIT_REPO_URI="https://github.com/openstack/nova.git"
-EGIT_BRANCH="stable/ocata"
+SRC_URI="https://dev.gentoo.org/~prometheanfire/dist/openstack/nova/ocata/nova.conf.sample -> nova.conf.sample-${PV}
+	https://tarballs.openstack.org/${PN}/${P}.tar.gz"
 
 LICENSE="Apache-2.0"
 SLOT="0"
-KEYWORDS=""
+KEYWORDS="~amd64 ~arm64 ~x86"
 IUSE="+compute compute-only iscsi +memcached mysql +novncproxy openvswitch postgres +rabbitmq sqlite"
 REQUIRED_USE="
 	!compute-only? ( || ( mysql postgres sqlite ) )
