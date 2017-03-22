@@ -5,16 +5,18 @@ EAPI=6
 
 RESTRICT="test"
 
-inherit git-r3 elisp-common eutils multilib pax-utils toolchain-funcs
+inherit elisp-common eutils multilib pax-utils toolchain-funcs
 
 DESCRIPTION="High-performance programming language for technical computing"
 HOMEPAGE="http://julialang.org/"
-SRC_URI=""
-EGIT_REPO_URI="git://github.com/JuliaLang/julia.git"
+SRC_URI="
+	https://github.com/JuliaLang/${PN}/releases/download/v${PV}/${P}.tar.gz
+	https://dev.gentoo.org/~tamiko/distfiles/${P}-bundled.tar.gz
+"
 
 LICENSE="MIT"
 SLOT="0"
-KEYWORDS=""
+KEYWORDS="~amd64 ~x86 ~amd64-linux ~x86-linux"
 IUSE="emacs"
 
 RDEPEND="
@@ -36,7 +38,7 @@ RDEPEND="
 	>=sys-libs/libunwind-1.1:7=
 	sys-libs/readline:0=
 	sys-libs/zlib:0=
-	>=virtual/blas-1.1
+	>=virtual/blas-3.6
 	virtual/lapack
 	emacs? ( app-emacs/ess )"
 
@@ -45,15 +47,20 @@ DEPEND="${RDEPEND}
 	virtual/pkgconfig"
 
 PATCHES=(
-	"${FILESDIR}"/${PN}-9999-fix_build_system.patch
+	"${FILESDIR}"/${PN}-0.5.0-fix_build_system.patch
 )
 
 src_prepare() {
+	mkdir deps/srccache || die
+	mv "${WORKDIR}"/bundled/* deps/srccache || die
+	rmdir "${WORKDIR}"/bundled || die
+
 	epatch "${PATCHES[@]}"
 
 	eapply_user
 
 	# Sledgehammer:
+	# - prevent fetching of bundled stuff in compile and install phase
 	# - respect CFLAGS
 	# - respect EPREFIX and Gentoo specific paths
 	# - fix BLAS and LAPACK link interface
@@ -164,7 +171,7 @@ src_install() {
 	rmdir "${ED}"/usr/etc || die
 	rmdir "${ED}"/usr/libexec || die
 	mv "${ED}"/usr/share/doc/julia/{examples,html} \
-		"${ED}"/usr/share/doc/${P} || die
+		"${ED}"/usr/share/doc/${PF} || die
 	rmdir "${ED}"/usr/share/doc/julia || die
 	if [[ $(get_libdir) != lib ]]; then
 		mkdir -p "${ED}"/usr/$(get_libdir) || die
