@@ -1,6 +1,5 @@
-# Copyright 1999-2017 Gentoo Foundation
+# Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-devel/autoconf/autoconf-2.69.ebuild,v 1.18 2014/01/17 04:23:13 vapier Exp $
 
 EAPI="3"
 
@@ -9,18 +8,15 @@ inherit eutils
 if [[ ${PV} == "9999" ]] ; then
 	EGIT_REPO_URI="git://git.savannah.gnu.org/${PN}.git
 		http://git.savannah.gnu.org/r/${PN}.git"
-
 	inherit git-2
-	SRC_URI=""
-	#KEYWORDS=""
 else
 	SRC_URI="mirror://gnu/${PN}/${P}.tar.xz
 		ftp://alpha.gnu.org/pub/gnu/${PN}/${P}.tar.xz"
-	KEYWORDS="~ppc-aix ~x64-cygwin ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~m68k-mint ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
+	KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd ~arm-linux ~x86-linux"
 fi
 
 DESCRIPTION="Used to create autoconfiguration files"
-HOMEPAGE="http://www.gnu.org/software/autoconf/autoconf.html"
+HOMEPAGE="https://www.gnu.org/software/autoconf/autoconf.html"
 
 LICENSE="GPL-3"
 SLOT="2.5"
@@ -33,12 +29,10 @@ RDEPEND="${DEPEND}
 PDEPEND="emacs? ( app-emacs/autoconf-mode )"
 
 src_prepare() {
-	# usr/bin/libtool is provided by binutils-apple
-	[[ ${CHOST} == *-darwin* ]] && epatch "${FILESDIR}"/${PN}-2.61-darwin.patch
-
 	if [[ ${PV} == "9999" ]] ; then
 		autoreconf -f -i || die
 	fi
+	find -name Makefile.in -exec sed -i '/^pkgdatadir/s:$:-@VERSION@:' {} +
 }
 
 src_configure() {
@@ -54,4 +48,9 @@ src_install() {
 	emake DESTDIR="${D}" install || die
 	dodoc AUTHORS BUGS NEWS README TODO THANKS \
 		ChangeLog ChangeLog.0 ChangeLog.1 ChangeLog.2
+
+	local f
+	for f in "${ED}"/usr/share/info/*.info* ; do
+		mv "${f}" "${f/.info/-${SLOT}.info}" || die
+	done
 }

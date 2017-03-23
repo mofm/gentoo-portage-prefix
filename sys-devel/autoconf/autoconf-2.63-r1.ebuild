@@ -21,9 +21,7 @@ RDEPEND="${DEPEND}
 	>=sys-devel/autoconf-wrapper-13"
 
 PATCHES=(
-	"${FILESDIR}"/${P}-revert-AC_C_BIGENDIAN.patch #228825
-	"${FILESDIR}"/${P}-at-keywords.patch
-	"${FILESDIR}"/${P}-fix-multiline-string.patch #217976
+	"${FILESDIR}"/${P}-sh.patch #264303
 )
 
 if [[ -z ${__EBLITS__} && -n ${FILESDIR} ]] ; then

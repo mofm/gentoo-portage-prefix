@@ -3,11 +3,9 @@
 
 EAPI="5"
 
-inherit eutils
-
 DESCRIPTION="Used to create autoconfiguration files"
 HOMEPAGE="https://www.gnu.org/software/autoconf/autoconf.html"
-SRC_URI="mirror://gnu/${PN}/${P}.tar.bz2"
+SRC_URI="mirror://gnu/${PN}/${P}.tar.xz"
 
 LICENSE="GPL-2"
 SLOT="${PV}"
@@ -19,12 +17,6 @@ DEPEND=">=sys-devel/m4-1.4.6
 RDEPEND="${DEPEND}
 	!~sys-devel/${P}:2.5
 	>=sys-devel/autoconf-wrapper-13"
-
-PATCHES=(
-	"${FILESDIR}"/${P}-revert-AC_C_BIGENDIAN.patch #228825
-	"${FILESDIR}"/${P}-at-keywords.patch
-	"${FILESDIR}"/${P}-fix-multiline-string.patch #217976
-)
 
 if [[ -z ${__EBLITS__} && -n ${FILESDIR} ]] ; then
 	source "${FILESDIR}"/eblits/main.eblit || die
