@@ -10,16 +10,16 @@ MY_P="${P/_/-}"
 
 DESCRIPTION="Cross platform Make"
 HOMEPAGE="http://www.cmake.org/"
-SRC_URI="http://www.cmake.org/files/v$(get_version_component_range 1-2)/${MY_P}.tar.gz
-https://dev.gentoo.org/~kensington/distfiles/${PN}-3.7.2-x32.patch.xz"
+SRC_URI="http://www.cmake.org/files/v$(get_version_component_range 1-2)/${MY_P}.tar.gz"
 
 LICENSE="CMake"
 SLOT="0"
 [[ "${PV}" = *_rc* ]] || \
-KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd ~amd64-linux ~arm-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~sparc-solaris ~x64-solaris ~x86-solaris"
+KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd ~amd64-linux ~arm-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~sparc-solaris ~x64-solaris ~x86-solaris"
 IUSE="doc emacs system-jsoncpp ncurses qt5"
 
 RDEPEND="
+	app-crypt/rhash
 	>=app-arch/libarchive-3.0.0:=
 	>=dev-libs/expat-2.0.1
 	>=dev-libs/libuv-1.0.0:=
@@ -61,9 +61,6 @@ PATCHES=(
 	"${FILESDIR}"/${PN}-3.1.0-FindPythonInterp.patch
 
 	# upstream fixes (can usually be removed with a version bump)
-
-	# testing 3.9 backports - bug #426936
-	"${WORKDIR}"/${PN}-3.7.2-x32.patch
 )
 
 cmake_src_bootstrap() {
@@ -114,10 +111,9 @@ cmake_src_test() {
 	#    CTest.updatecvs: which fails to commit as root
 	#    Fortran: requires fortran
 	#    Qt4Deploy, which tries to break sandbox and ignores prefix
-	#    Qt5Autogen, which breaks for unknown reason
 	#    TestUpload, which requires network access
 	"${BUILD_DIR}"/bin/ctest ${ctestargs} \
-		-E "(BootstrapTest|BundleUtilities|CTest.UpdateCVS|Fortran|Qt4Deploy|Qt5Autogen|TestUpload)" \
+		-E "(BootstrapTest|BundleUtilities|CTest.UpdateCVS|Fortran|Qt4Deploy|TestUpload)" \
 		|| die "Tests failed"
 
 	popd > /dev/null
