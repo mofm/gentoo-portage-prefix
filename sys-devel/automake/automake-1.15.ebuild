@@ -1,8 +1,7 @@
-# Copyright 1999-2017 Gentoo Foundation
+# Copyright 1999-2016 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Id$
 
-EAPI="4"
+EAPI="5"
 
 inherit eutils versionator
 
@@ -19,12 +18,12 @@ else
 fi
 
 DESCRIPTION="Used to generate Makefile.in from Makefile.am"
-HOMEPAGE="http://www.gnu.org/software/automake/"
+HOMEPAGE="https://www.gnu.org/software/automake/"
 
 LICENSE="GPL-2"
 # Use Gentoo versioning for slotting.
 SLOT="${PV:0:4}"
-KEYWORDS="~ppc-aix ~x64-cygwin ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~m68k-mint ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
+KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
 IUSE=""
 
 RDEPEND="dev-lang/perl
@@ -38,14 +37,11 @@ S="${WORKDIR}/${MY_P}"
 
 src_prepare() {
 	export WANT_AUTOCONF=2.5
+	sed -i -e "/APIVERSION=/s:=.*:=${SLOT}:" configure || die
 }
 
 src_configure() {
-	econf --docdir="${EPREFIX}"/usr/share/doc/${PF} HELP2MAN=true
-}
-
-src_compile() {
-	emake APIVERSION="${SLOT}" pkgvdatadir="${EPREFIX}/usr/share/${PN}-${SLOT}"
+	econf --docdir="\$(datarootdir)/doc/${PF}"
 }
 
 src_test() {
@@ -82,13 +78,11 @@ slot_info_pages() {
 }
 
 src_install() {
-	emake DESTDIR="${D}" install \
-		APIVERSION="${SLOT}" pkgvdatadir="${EPREFIX}/usr/share/${PN}-${SLOT}"
+	default
+
 	slot_info_pages
 	rm "${ED}"/usr/share/aclocal/README || die
 	rmdir "${ED}"/usr/share/aclocal || die
-	dodoc AUTHORS ChangeLog NEWS README THANKS
-
 	rm \
 		"${ED}"/usr/bin/{aclocal,automake} \
 		"${ED}"/usr/share/man/man1/{aclocal,automake}.1 || die

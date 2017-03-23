@@ -12,7 +12,7 @@ SRC_URI="mirror://gnu/${PN}/${P}.tar.xz"
 LICENSE="GPL-2"
 # Use Gentoo versioning for slotting.
 SLOT="${PV:0:4}"
-KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
+KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
 IUSE=""
 
 RDEPEND="dev-lang/perl
@@ -24,16 +24,12 @@ DEPEND="${RDEPEND}
 
 src_prepare() {
 	export WANT_AUTOCONF=2.5
-	epatch "${FILESDIR}"/${PN}-1.13-dyn-ithreads.patch
+	epatch "${FILESDIR}"/${PN}-1.13-perl-escape-curly-bracket.patch
 	sed -i -e "/APIVERSION=/s:=.*:=${SLOT}:" configure || die
 }
 
 src_configure() {
 	econf --docdir="\$(datarootdir)/doc/${PF}"
-}
-
-src_test() {
-	emake check
 }
 
 # slot the info pages.  do this w/out munging the source so we don't have

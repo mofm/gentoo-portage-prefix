@@ -1,13 +1,13 @@
-# Copyright 1999-2016 Gentoo Foundation
+# Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI="5"
+EAPI="4"
 
 inherit eutils
 
 DESCRIPTION="Used to generate Makefile.in from Makefile.am"
 HOMEPAGE="https://www.gnu.org/software/automake/"
-SRC_URI="mirror://gnu/${PN}/${P}.tar.xz"
+SRC_URI="mirror://gnu/${PN}/${P}.tar.bz2"
 
 LICENSE="GPL-2"
 # Use Gentoo versioning for slotting.
@@ -24,16 +24,12 @@ DEPEND="${RDEPEND}
 
 src_prepare() {
 	export WANT_AUTOCONF=2.5
-	epatch "${FILESDIR}"/${PN}-1.13-dyn-ithreads.patch
-	sed -i -e "/APIVERSION=/s:=.*:=${SLOT}:" configure || die
+	epatch "${FILESDIR}"/${PN}-1.10-perl-5.16.patch #424453
+	chmod a+rx tests/*.test
 }
 
 src_configure() {
 	econf --docdir="\$(datarootdir)/doc/${PF}"
-}
-
-src_test() {
-	emake check
 }
 
 # slot the info pages.  do this w/out munging the source so we don't have
@@ -67,17 +63,18 @@ slot_info_pages() {
 
 src_install() {
 	default
-
 	slot_info_pages
-	rm "${ED}"/usr/share/aclocal/README || die
-	rmdir "${ED}"/usr/share/aclocal || die
-	rm \
-		"${ED}"/usr/bin/{aclocal,automake} \
-		"${ED}"/usr/share/man/man1/{aclocal,automake}.1 || die
+
+	# SLOT the docs and junk
+	local x
+	for x in aclocal automake ; do
+		help2man "perl -Ilib ${x}" > ${x}-${SLOT}.1
+		doman ${x}-${SLOT}.1
+		rm -f "${ED}"/usr/bin/${x}
+	done
 
 	# remove all config.guess and config.sub files replacing them
 	# w/a symlink to a specific gnuconfig version
-	local x
 	for x in guess sub ; do
 		dosym ../gnuconfig/config.${x} /usr/share/${PN}-${SLOT}/config.${x}
 	done

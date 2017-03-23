@@ -1,39 +1,35 @@
-# Copyright 1999-2016 Gentoo Foundation
+# Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI="5"
+EAPI="4"
 
 inherit eutils
 
 DESCRIPTION="Used to generate Makefile.in from Makefile.am"
 HOMEPAGE="https://www.gnu.org/software/automake/"
-SRC_URI="mirror://gnu/${PN}/${P}.tar.xz"
+SRC_URI="mirror://gnu/${PN}/${P}.tar.gz"
 
 LICENSE="GPL-2"
 # Use Gentoo versioning for slotting.
-SLOT="${PV:0:4}"
-KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
+SLOT="${PV:0:3}"
+KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~sparc-fbsd ~x86-fbsd"
 IUSE=""
 
 RDEPEND="dev-lang/perl
 	>=sys-devel/automake-wrapper-10
 	>=sys-devel/autoconf-2.69
 	sys-devel/gnuconfig"
-DEPEND="${RDEPEND}
-	sys-apps/help2man"
+DEPEND="${RDEPEND}"
 
 src_prepare() {
 	export WANT_AUTOCONF=2.5
-	epatch "${FILESDIR}"/${PN}-1.13-dyn-ithreads.patch
-	sed -i -e "/APIVERSION=/s:=.*:=${SLOT}:" configure || die
-}
-
-src_configure() {
-	econf --docdir="\$(datarootdir)/doc/${PF}"
-}
-
-src_test() {
-	emake check
+	epatch "${FILESDIR}"/automake-1.4-nls-nuisances.patch #121151
+	epatch "${FILESDIR}"/${P}-target_hook.patch
+	epatch "${FILESDIR}"/${P}-slot.patch
+	epatch "${FILESDIR}"/${P}-test-fixes.patch #79505
+	epatch "${FILESDIR}"/${PN}-1.10-ccnoco-ldflags.patch #203914
+	epatch "${FILESDIR}"/${P}-CVE-2009-4029.patch #295357
+	epatch "${FILESDIR}"/${PN}-1.5-perl-5.11.patch
 }
 
 # slot the info pages.  do this w/out munging the source so we don't have
@@ -67,17 +63,16 @@ slot_info_pages() {
 
 src_install() {
 	default
-
 	slot_info_pages
-	rm "${ED}"/usr/share/aclocal/README || die
-	rmdir "${ED}"/usr/share/aclocal || die
-	rm \
-		"${ED}"/usr/bin/{aclocal,automake} \
-		"${ED}"/usr/share/man/man1/{aclocal,automake}.1 || die
+
+	local x
+	for x in aclocal automake ; do
+		mv "${ED}"/usr/bin/${x}{,-${SLOT}} || die "rename ${x}"
+		mv "${ED}"/usr/share/${x}{,-${SLOT}} || die "move ${x}"
+	done
 
 	# remove all config.guess and config.sub files replacing them
 	# w/a symlink to a specific gnuconfig version
-	local x
 	for x in guess sub ; do
 		dosym ../gnuconfig/config.${x} /usr/share/${PN}-${SLOT}/config.${x}
 	done

@@ -24,16 +24,23 @@ DEPEND="${RDEPEND}
 
 src_prepare() {
 	export WANT_AUTOCONF=2.5
-	epatch "${FILESDIR}"/${PN}-1.13-dyn-ithreads.patch
+	epatch "${FILESDIR}"/${PN}-1.10-perl-5.16.patch #424453
+	chmod a+rx tests/*.test
 	sed -i -e "/APIVERSION=/s:=.*:=${SLOT}:" configure || die
+	export TZ="UTC"  #589138
 }
 
 src_configure() {
-	econf --docdir="\$(datarootdir)/doc/${PF}"
+	econf --docdir="\$(datarootdir)/doc/${PF}" HELP2MAN=true
 }
 
-src_test() {
-	emake check
+src_compile() {
+	default
+
+	local x
+	for x in aclocal automake; do
+		help2man "perl -Ilib ${x}" > doc/${x}-${SLOT}.1
+	done
 }
 
 # slot the info pages.  do this w/out munging the source so we don't have
@@ -67,10 +74,8 @@ slot_info_pages() {
 
 src_install() {
 	default
-
 	slot_info_pages
-	rm "${ED}"/usr/share/aclocal/README || die
-	rmdir "${ED}"/usr/share/aclocal || die
+
 	rm \
 		"${ED}"/usr/bin/{aclocal,automake} \
 		"${ED}"/usr/share/man/man1/{aclocal,automake}.1 || die

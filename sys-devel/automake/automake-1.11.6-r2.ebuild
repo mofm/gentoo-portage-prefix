@@ -12,7 +12,7 @@ SRC_URI="mirror://gnu/${PN}/${P}.tar.xz"
 LICENSE="GPL-2"
 # Use Gentoo versioning for slotting.
 SLOT="${PV:0:4}"
-KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
+KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
 IUSE=""
 
 RDEPEND="dev-lang/perl
@@ -24,16 +24,25 @@ DEPEND="${RDEPEND}
 
 src_prepare() {
 	export WANT_AUTOCONF=2.5
-	epatch "${FILESDIR}"/${PN}-1.13-dyn-ithreads.patch
+	epatch "${FILESDIR}"/${PN}-1.10-perl-5.16.patch #424453
+	epatch "${FILESDIR}"/${PN}-1.13-perl-escape-curly-bracket.patch
+	chmod a+rx tests/*.test
+	export HELP2MAN=true
 	sed -i -e "/APIVERSION=/s:=.*:=${SLOT}:" configure || die
+	export TZ="UTC"  #589138
 }
 
 src_configure() {
 	econf --docdir="\$(datarootdir)/doc/${PF}"
 }
 
-src_test() {
-	emake check
+src_compile() {
+	default
+
+	local x
+	for x in aclocal automake; do
+		help2man "perl -Ilib ${x}" > doc/${x}-${SLOT}.1
+	done
 }
 
 # slot the info pages.  do this w/out munging the source so we don't have
@@ -67,10 +76,8 @@ slot_info_pages() {
 
 src_install() {
 	default
-
 	slot_info_pages
-	rm "${ED}"/usr/share/aclocal/README || die
-	rmdir "${ED}"/usr/share/aclocal || die
+
 	rm \
 		"${ED}"/usr/bin/{aclocal,automake} \
 		"${ED}"/usr/share/man/man1/{aclocal,automake}.1 || die

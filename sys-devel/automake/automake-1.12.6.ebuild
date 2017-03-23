@@ -24,16 +24,11 @@ DEPEND="${RDEPEND}
 
 src_prepare() {
 	export WANT_AUTOCONF=2.5
-	epatch "${FILESDIR}"/${PN}-1.13-dyn-ithreads.patch
 	sed -i -e "/APIVERSION=/s:=.*:=${SLOT}:" configure || die
 }
 
 src_configure() {
 	econf --docdir="\$(datarootdir)/doc/${PF}"
-}
-
-src_test() {
-	emake check
 }
 
 # slot the info pages.  do this w/out munging the source so we don't have

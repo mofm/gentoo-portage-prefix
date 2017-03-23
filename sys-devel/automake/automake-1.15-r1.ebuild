@@ -3,16 +3,27 @@
 
 EAPI="5"
 
-inherit eutils
+inherit eutils versionator
+
+if [[ ${PV/_beta} == ${PV} ]]; then
+	MY_P=${P}
+	SRC_URI="mirror://gnu/${PN}/${P}.tar.xz
+		ftp://alpha.gnu.org/pub/gnu/${PN}/${MY_P}.tar.xz"
+else
+	MY_PV="$(get_major_version).$(($(get_version_component_range 2)-1))b"
+	MY_P="${PN}-${MY_PV}"
+
+	# Alpha/beta releases are not distributed on the usual mirrors.
+	SRC_URI="ftp://alpha.gnu.org/pub/gnu/${PN}/${MY_P}.tar.xz"
+fi
 
 DESCRIPTION="Used to generate Makefile.in from Makefile.am"
 HOMEPAGE="https://www.gnu.org/software/automake/"
-SRC_URI="mirror://gnu/${PN}/${P}.tar.xz"
 
 LICENSE="GPL-2"
 # Use Gentoo versioning for slotting.
 SLOT="${PV:0:4}"
-KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
+KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
 IUSE=""
 
 RDEPEND="dev-lang/perl
@@ -22,9 +33,11 @@ RDEPEND="dev-lang/perl
 DEPEND="${RDEPEND}
 	sys-apps/help2man"
 
+S="${WORKDIR}/${MY_P}"
+
 src_prepare() {
 	export WANT_AUTOCONF=2.5
-	epatch "${FILESDIR}"/${PN}-1.13-dyn-ithreads.patch
+	epatch "${FILESDIR}"/${PN}-1.15-perl-escape-curly-bracket.patch
 	sed -i -e "/APIVERSION=/s:=.*:=${SLOT}:" configure || die
 }
 
