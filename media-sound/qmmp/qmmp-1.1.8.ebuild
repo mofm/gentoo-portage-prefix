@@ -4,64 +4,87 @@
 EAPI=6
 
 inherit cmake-utils
-[ "$PV" == "9999" ] && inherit subversion
+[[ ${PV} = 9999 ]] && inherit subversion
 
-DESCRIPTION="Qt4-based audio player with winamp/xmms skins support"
+DESCRIPTION="Qt5-based audio player with winamp/xmms skins support"
 HOMEPAGE="http://qmmp.ylsoftware.com"
-if [ "$PV" != "9999" ]; then
+if [[ ${PV} != 9999 ]]; then
 	SRC_URI="http://qmmp.ylsoftware.com/files/${P}.tar.bz2"
-	KEYWORDS="amd64 ~ppc x86"
+	KEYWORDS="~amd64 ~x86"
 else
-	ESVN_REPO_URI="https://svn.code.sf.net/p/qmmp-dev/code/trunk/qmmp/"
+	QMMP_DEV_BRANCH="1.1"
+	ESVN_REPO_URI="svn://svn.code.sf.net/p/${PN}-dev/code/branches/${PN}-${QMMP_DEV_BRANCH}"
 fi
 
 LICENSE="GPL-2"
 SLOT="0"
 # KEYWORDS further up
-IUSE="analyzer aac +alsa bs2b cdda cover crossfade cue curl enca ffmpeg flac jack game kde ladspa
-lyrics +mad midi mms modplug mplayer mpris musepack notifier opus oss projectm
-pulseaudio qsui scrobbler sndfile soxr stereo tray udisks +vorbis wavpack"
+IUSE="aac +alsa analyzer bs2b cdda cover crossfade cue curl +dbus enca ffmpeg flac game gnome
+jack ladspa libav lyrics +mad midi mms modplug mplayer musepack notifier opus oss projectm
+pulseaudio qsui qtmedia scrobbler sid sndfile soxr stereo tray udisks +vorbis wavpack"
 
-RDEPEND="media-libs/taglib
-	dev-qt/qtcore:4
-	dev-qt/qtdbus:4
-	dev-qt/qtgui:4
-	dev-qt/qtmultimedia:4
+RDEPEND="
+	dev-qt/qtcore:5
+	dev-qt/qtgui:5
+	dev-qt/qtnetwork:5
+	dev-qt/qtwidgets:5
+	dev-qt/qtx11extras:5
+	media-libs/taglib
+	x11-libs/libX11
+	aac? ( media-libs/faad2 )
 	alsa? ( media-libs/alsa-lib )
 	bs2b? ( media-libs/libbs2b )
-	cdda? ( dev-libs/libcdio-paranoia )
+	cdda? (
+		dev-libs/libcdio
+		dev-libs/libcdio-paranoia
+	)
 	cue? ( media-libs/libcue )
 	curl? ( net-misc/curl )
-	aac? ( media-libs/faad2 )
+	dbus? ( dev-qt/qtdbus:5 )
 	enca? ( app-i18n/enca )
+	ffmpeg? (
+		!libav? ( media-video/ffmpeg:= )
+		libav? ( media-video/libav:= )
+	)
 	flac? ( media-libs/flac )
 	game? ( media-libs/game-music-emu )
+	jack? (
+		media-libs/libsamplerate
+		media-sound/jack-audio-connection-kit
+	)
 	ladspa? ( media-libs/ladspa-cmt )
 	mad? ( media-libs/libmad )
 	midi? ( media-sound/wildmidi )
 	mms? ( media-libs/libmms )
+	modplug? ( >=media-libs/libmodplug-0.8.4 )
 	mplayer? ( media-video/mplayer )
 	musepack? ( >=media-sound/musepack-tools-444 )
-	modplug? ( >=media-libs/libmodplug-0.8.4 )
-	vorbis? ( media-libs/libvorbis
-		media-libs/libogg )
-	jack? ( media-sound/jack-audio-connection-kit
-		media-libs/libsamplerate )
-	ffmpeg? ( virtual/ffmpeg )
 	opus? ( media-libs/opusfile )
-	projectm? ( media-libs/libprojectm
-		dev-qt/qtopengl:4 )
+	projectm? (
+		dev-qt/qtgui:5[-gles2]
+		dev-qt/qtopengl:5
+		media-libs/libprojectm
+	)
 	pulseaudio? ( >=media-sound/pulseaudio-0.9.9 )
-	wavpack? ( media-sound/wavpack )
+	qtmedia? ( dev-qt/qtmultimedia:5 )
 	scrobbler? ( net-misc/curl )
 	sndfile? ( media-libs/libsndfile )
+	sid? ( >=media-libs/libsidplayfp-1.1.0 )
 	soxr? ( media-libs/soxr )
-	udisks? ( sys-fs/udisks:2 )"
-DEPEND="${RDEPEND}"
+	udisks? ( sys-fs/udisks:2 )
+	vorbis? (
+		media-libs/libogg
+		media-libs/libvorbis
+	)
+	wavpack? ( media-sound/wavpack )
+"
+DEPEND="${RDEPEND}
+	dev-qt/linguist-tools:5
+"
 
-DOCS="AUTHORS ChangeLog README"
+DOCS=( AUTHORS ChangeLog README )
 
-CMAKE_IN_SOURCE_BUILD="1"
+REQUIRED_USE="gnome? ( dbus ) udisks? ( dbus )"
 
 src_prepare() {
 	if has_version dev-libs/libcdio-paranoia; then
@@ -74,7 +97,7 @@ src_prepare() {
 }
 
 src_configure() {
-	mycmakeargs=(
+	local mycmakeargs=(
 		-DUSE_ALSA="$(usex alsa)"
 		-DUSE_AAC="$(usex aac)"
 		-DUSE_ANALYZER="$(usex analyzer)"
@@ -86,12 +109,12 @@ src_configure() {
 		-DUSE_CURL="$(usex curl)"
 		-DUSE_ENCA="$(usex enca)"
 		-DUSE_FFMPEG="$(usex ffmpeg)"
-		-DUSE_FFMPEG_LEGACY=OFF
 		-DUSE_FLAC="$(usex flac)"
 		-DUSE_GME="$(usex game)"
+		-DUSE_GNOMEHOTKEY="$(usex gnome)"
 		-DUSE_HAL=OFF
 		-DUSE_JACK="$(usex jack)"
-		-DUSE_KDENOTIFY="$(usex kde)"
+		-DUSE_KDENOTIFY="$(usex dbus)"
 		-DUSE_LADSPA="$(usex ladspa)"
 		-DUSE_LYRICS="$(usex lyrics)"
 		-DUSE_MAD="$(usex mad)"
@@ -99,7 +122,7 @@ src_configure() {
 		-DUSE_MPLAYER="$(usex mplayer)"
 		-DUSE_MMS="$(usex mms)"
 		-DUSE_MODPLUG="$(usex modplug)"
-		-DUSE_MPRIS="$(usex mpris)"
+		-DUSE_MPRIS="$(usex dbus)"
 		-DUSE_MPC="$(usex musepack)"
 		-DUSE_NOTIFIER="$(usex notifier)"
 		-DUSE_OPUS="$(usex opus)"
@@ -107,16 +130,17 @@ src_configure() {
 		-DUSE_PROJECTM="$(usex projectm)"
 		-DUSE_PULSE="$(usex pulseaudio)"
 		-DUSE_QSUI="$(usex qsui)"
+		-DUSE_QTMULTIMEDIA="$(usex qtmedia)"
 		-DUSE_SCROBBLER="$(usex scrobbler)"
+		-DUSE_SID="$(usex sid)"
 		-DUSE_SNDFILE="$(usex sndfile)"
 		-DUSE_SOXR="$(usex soxr)"
 		-DUSE_STEREO="$(usex stereo)"
 		-DUSE_STATICON="$(usex tray)"
 		-DUSE_UDISKS2="$(usex udisks)"
-		-DUSE_UDISKS=OFF
 		-DUSE_VORBIS="$(usex vorbis)"
 		-DUSE_WAVPACK="$(usex wavpack)"
-		)
+	)
 
 	cmake-utils_src_configure
 }
